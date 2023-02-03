@@ -2,10 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:macos_ui/src/layout/scrollbar.dart';
 import 'package:macos_ui/src/layout/content_area.dart';
 import 'package:macos_ui/src/layout/resizable_pane.dart';
 import 'package:macos_ui/src/layout/scaffold.dart';
+import 'package:macos_ui/src/layout/scrollbar.dart';
 import 'package:macos_ui/src/layout/sidebar/sidebar.dart';
 import 'package:macos_ui/src/layout/title_bar.dart';
 import 'package:macos_ui/src/library.dart';
@@ -215,8 +215,11 @@ class _MacosWindowState extends State<MacosWindow> {
                   ).normalize(),
                   child: Column(
                     children: [
-                      if ((widget.sidebar?.topOffset ?? 0) > 0)
-                        SizedBox(height: widget.sidebar?.topOffset),
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOutCubic,
+                        child: SizedBox(height: widget.sidebar?.topOffset ?? 0),
+                      ),
                       if (_sidebarScrollController.hasClients &&
                           _sidebarScrollController.offset > 0.0)
                         Divider(thickness: 1, height: 1, color: dividerColor),
