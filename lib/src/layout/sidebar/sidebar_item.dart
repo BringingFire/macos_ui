@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:macos_ui/macos_ui.dart';
 import 'package:macos_ui/src/library.dart';
 
 /// A macOS style navigation-list item intended for use in a [Sidebar]
@@ -13,6 +12,7 @@ class SidebarItem with Diagnosticable {
   const SidebarItem({
     this.leading,
     required this.label,
+    required this.identifier,
     this.selectedColor,
     this.unselectedColor,
     this.shape,
@@ -21,6 +21,8 @@ class SidebarItem with Diagnosticable {
     this.disclosureItems,
     this.trailing,
   });
+
+  final String identifier;
 
   /// The widget before [label].
   ///
