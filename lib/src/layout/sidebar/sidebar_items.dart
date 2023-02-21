@@ -47,7 +47,7 @@ class SidebarItems extends StatelessWidget {
   const SidebarItems({
     super.key,
     required this.items,
-    required this.currenIdentifier,
+    required this.currentIdentifier,
     required this.onChanged,
     this.itemSize = SidebarItemSize.medium,
     this.scrollController,
@@ -62,7 +62,7 @@ class SidebarItems extends StatelessWidget {
   final List<SidebarItem> items;
 
   /// The id of the currently selected item. There must be a [SidebarItem] with a matching id in [items].
-  final String currenIdentifier;
+  final String currentIdentifier;
 
   /// Called when the current selected identifier should be changed.
   final ValueChanged<String> onChanged;
@@ -132,7 +132,7 @@ class SidebarItems extends StatelessWidget {
                 cursor: cursor!,
                 child: _DisclosureSidebarItem(
                   item: item,
-                  currenIdentifier: currenIdentifier,
+                  currentIdentifier: currentIdentifier,
                   onChanged: (item) {
                     onChanged(item.identifier);
                   },
@@ -143,7 +143,7 @@ class SidebarItems extends StatelessWidget {
               cursor: cursor!,
               child: _SidebarItem(
                 item: item,
-                currentIdentifier: currenIdentifier,
+                selected: item.identifier == currentIdentifier,
                 onClick: () => onChanged(item.identifier),
               ),
             );
@@ -188,7 +188,7 @@ class _SidebarItem extends StatelessWidget {
     Key? key,
     required this.item,
     required this.onClick,
-    required this.currentIdentifier,
+    required this.selected,
   }) : super(key: key);
 
   /// The widget to lay out first.
@@ -196,7 +196,7 @@ class _SidebarItem extends StatelessWidget {
   /// Typically an [Icon]
   final SidebarItem item;
 
-  final String? currentIdentifier;
+  final bool selected;
 
   /// A function to perform when the widget is clicked or tapped.
   ///
@@ -218,7 +218,6 @@ class _SidebarItem extends StatelessWidget {
 
   bool get hasLeading => item.leading != null;
   bool get hasTrailing => item.trailing != null;
-  bool get selected => item.identifier == currentIdentifier;
 
   @override
   Widget build(BuildContext context) {
@@ -317,14 +316,14 @@ class _DisclosureSidebarItem extends StatefulWidget {
   _DisclosureSidebarItem({
     Key? key,
     required this.item,
-    required this.currenIdentifier,
+    required this.currentIdentifier,
     this.onChanged,
   })  : assert(item.disclosureItems != null),
         super(key: key);
 
   final SidebarItem item;
 
-  final String? currenIdentifier;
+  final String? currentIdentifier;
 
   /// A function to perform when the widget is clicked or tapped.
   ///
@@ -434,7 +433,7 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem> with Si
               trailing: widget.item.trailing,
             ),
             onClick: () => widget.onChanged?.call(widget.item),
-            currentIdentifier: widget.currenIdentifier,
+            selected: widget.item.identifier == widget.currentIdentifier,
           ),
         ),
         ClipRect(
@@ -481,11 +480,11 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem> with Si
                     ? _SidebarItem(
                         item: item,
                         onClick: () => widget.onChanged?.call(item),
-                        currentIdentifier: widget.currenIdentifier,
+                        selected: item.identifier == widget.currentIdentifier,
                       )
                     : _DisclosureSidebarItem(
                         item: item,
-                        currenIdentifier: widget.currenIdentifier,
+                        currentIdentifier: widget.currentIdentifier,
                         onChanged: (item) {
                           widget.onChanged?.call(item);
                         },

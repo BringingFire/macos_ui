@@ -174,7 +174,7 @@ class _WidgetGalleryState extends State<WidgetGallery> {
           minWidth: 200,
           builder: (context, scrollController) {
             return SidebarItems(
-              currenIdentifier: currentIdentifier,
+              currentIdentifier: currentIdentifier,
               onChanged: (i) => setState(() => currentIdentifier = i),
               scrollController: scrollController,
               itemSize: SidebarItemSize.large,
@@ -280,7 +280,7 @@ class _WidgetGalleryState extends State<WidgetGallery> {
             );
           },
         ),
-        child: currentIdentifier != null ? pages[currentIdentifier] : const SizedBox(),
+        child: pages[currentIdentifier],
       ),
     );
   }
