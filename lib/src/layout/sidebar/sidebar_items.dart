@@ -61,9 +61,10 @@ class SidebarItems extends StatelessWidget {
   /// the sidebar is not rendered.
   final List<SidebarItem> items;
 
-  final String? currenIdentifier;
+  /// The id of the currently selected item. There must be a [SidebarItem] with a matching id in [items].
+  final String currenIdentifier;
 
-  /// Called when the current selected index should be changed.
+  /// Called when the current selected identifier should be changed.
   final ValueChanged<String> onChanged;
 
   /// The size specifications for all [items].
@@ -142,7 +143,7 @@ class SidebarItems extends StatelessWidget {
               cursor: cursor!,
               child: _SidebarItem(
                 item: item,
-                currenIdentifier: currenIdentifier,
+                currentIdentifier: currenIdentifier,
                 onClick: () => onChanged(item.identifier),
               ),
             );
@@ -187,7 +188,7 @@ class _SidebarItem extends StatelessWidget {
     Key? key,
     required this.item,
     required this.onClick,
-    required this.currenIdentifier,
+    required this.currentIdentifier,
   }) : super(key: key);
 
   /// The widget to lay out first.
@@ -195,7 +196,7 @@ class _SidebarItem extends StatelessWidget {
   /// Typically an [Icon]
   final SidebarItem item;
 
-  final String? currenIdentifier;
+  final String? currentIdentifier;
 
   /// A function to perform when the widget is clicked or tapped.
   ///
@@ -217,7 +218,7 @@ class _SidebarItem extends StatelessWidget {
 
   bool get hasLeading => item.leading != null;
   bool get hasTrailing => item.trailing != null;
-  bool get selected => item.identifier == currenIdentifier;
+  bool get selected => item.identifier == currentIdentifier;
 
   @override
   Widget build(BuildContext context) {
@@ -433,7 +434,7 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem> with Si
               trailing: widget.item.trailing,
             ),
             onClick: () => widget.onChanged?.call(widget.item),
-            currenIdentifier: widget.currenIdentifier,
+            currentIdentifier: widget.currenIdentifier,
           ),
         ),
         ClipRect(
@@ -480,7 +481,7 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem> with Si
                     ? _SidebarItem(
                         item: item,
                         onClick: () => widget.onChanged?.call(item),
-                        currenIdentifier: widget.currenIdentifier,
+                        currentIdentifier: widget.currenIdentifier,
                       )
                     : _DisclosureSidebarItem(
                         item: item,

@@ -50,7 +50,7 @@ class _WidgetGalleryState extends State<WidgetGallery> {
   double sliderValue = 0;
   bool value = false;
 
-  String? currentIdentifier;
+  String currentIdentifier = 'buttons';
 
   late final searchFieldController = TextEditingController();
 
