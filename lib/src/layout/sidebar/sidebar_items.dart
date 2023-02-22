@@ -197,6 +197,7 @@ class _SidebarItem extends StatelessWidget {
   /// Typically an [Icon]
   final SidebarItem item;
 
+  /// Whether the item is selected or not
   final bool selected;
 
   /// A function to perform when the widget is clicked or tapped.
