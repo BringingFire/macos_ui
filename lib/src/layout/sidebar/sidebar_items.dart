@@ -111,6 +111,7 @@ class SidebarItems extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) return const SizedBox.shrink();
+    assert(debugCheckSidebarIdsUnique(items));
     assert(debugCheckHasMacosTheme(context));
     final theme = MacosTheme.of(context);
 
@@ -502,4 +503,10 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem> with Si
       child: closed ? null : result,
     );
   }
+}
+
+bool debugCheckSidebarIdsUnique(List<SidebarItem> items) {
+  List<SidebarItem> expand(SidebarItem i) => [i, ...?i.disclosureItems?.expand(expand)].toList();
+  final itemIds = items.expand(expand).map((i) => i.identifier);
+  return itemIds.length == Set.of(itemIds).length;
 }
