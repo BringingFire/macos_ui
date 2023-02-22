@@ -22,6 +22,8 @@ class SidebarItem with Diagnosticable {
     this.trailing,
   });
 
+  /// Arbitrary identifier for this sidebar item. Must be unique among all
+  /// sidebar items, including nested disclosure items.
   final String identifier;
 
   /// The widget before [label].
