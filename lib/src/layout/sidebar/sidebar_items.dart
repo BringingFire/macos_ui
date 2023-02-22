@@ -47,7 +47,7 @@ class SidebarItems extends StatelessWidget {
   const SidebarItems({
     super.key,
     required this.items,
-    required this.currentIndex,
+    required this.currentIdentifier,
     required this.onChanged,
     this.itemSize = SidebarItemSize.medium,
     this.scrollController,
@@ -55,18 +55,17 @@ class SidebarItems extends StatelessWidget {
     this.unselectedColor,
     this.shape,
     this.cursor = SystemMouseCursors.basic,
-  }) : assert(currentIndex >= 0);
+  });
 
   /// The [SidebarItem]s used by the sidebar. If no items are provided,
   /// the sidebar is not rendered.
   final List<SidebarItem> items;
 
-  /// The current selected index. It must be in the range of 0 to
-  /// [items.length]
-  final int currentIndex;
+  /// The id of the currently selected item. There must be a [SidebarItem] with a matching id in [items].
+  final String currentIdentifier;
 
-  /// Called when the current selected index should be changed.
-  final ValueChanged<int> onChanged;
+  /// Called when the current selected identifier should be changed.
+  final ValueChanged<String> onChanged;
 
   /// The size specifications for all [items].
   ///
@@ -112,9 +111,10 @@ class SidebarItems extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) return const SizedBox.shrink();
+    assert(debugCheckSidebarIdsUnique(items));
     assert(debugCheckHasMacosTheme(context));
-    assert(currentIndex < _allItems.length);
     final theme = MacosTheme.of(context);
+
     return IconTheme.merge(
       data: const IconThemeData(size: 20),
       child: _SidebarItemsConfiguration(
@@ -133,9 +133,9 @@ class SidebarItems extends StatelessWidget {
                 cursor: cursor!,
                 child: _DisclosureSidebarItem(
                   item: item,
-                  selectedItem: _allItems[currentIndex],
+                  currentIdentifier: currentIdentifier,
                   onChanged: (item) {
-                    onChanged(_allItems.indexOf(item));
+                    onChanged(item.identifier);
                   },
                 ),
               );
@@ -144,8 +144,8 @@ class SidebarItems extends StatelessWidget {
               cursor: cursor!,
               child: _SidebarItem(
                 item: item,
-                selected: _allItems[currentIndex] == item,
-                onClick: () => onChanged(_allItems.indexOf(item)),
+                selected: item.identifier == currentIdentifier,
+                onClick: () => onChanged(item.identifier),
               ),
             );
           }),
@@ -172,8 +172,7 @@ class _SidebarItemsConfiguration extends InheritedWidget {
   final SidebarItemSize itemSize;
 
   static _SidebarItemsConfiguration of(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<_SidebarItemsConfiguration>()!;
+    return context.dependOnInheritedWidgetOfExactType<_SidebarItemsConfiguration>()!;
   }
 
   @override
@@ -228,13 +227,11 @@ class _SidebarItem extends StatelessWidget {
     final theme = MacosTheme.of(context);
 
     final selectedColor = MacosDynamicColor.resolve(
-      item.selectedColor ??
-          _SidebarItemsConfiguration.of(context).selectedColor,
+      item.selectedColor ?? _SidebarItemsConfiguration.of(context).selectedColor,
       context,
     );
     final unselectedColor = MacosDynamicColor.resolve(
-      item.unselectedColor ??
-          _SidebarItemsConfiguration.of(context).unselectedColor,
+      item.unselectedColor ?? _SidebarItemsConfiguration.of(context).unselectedColor,
       context,
     );
 
@@ -286,9 +283,7 @@ class _SidebarItem extends StatelessWidget {
                     padding: EdgeInsets.only(right: spacing),
                     child: MacosIconTheme.merge(
                       data: MacosIconThemeData(
-                        color: selected
-                            ? MacosColors.white
-                            : MacosColors.controlAccentColor,
+                        color: selected ? MacosColors.white : MacosColors.controlAccentColor,
                         size: itemSize.iconSize,
                       ),
                       child: item.leading!,
@@ -323,14 +318,14 @@ class _DisclosureSidebarItem extends StatefulWidget {
   _DisclosureSidebarItem({
     Key? key,
     required this.item,
-    this.selectedItem,
+    required this.currentIdentifier,
     this.onChanged,
   })  : assert(item.disclosureItems != null),
         super(key: key);
 
   final SidebarItem item;
 
-  final SidebarItem? selectedItem;
+  final String? currentIdentifier;
 
   /// A function to perform when the widget is clicked or tapped.
   ///
@@ -341,12 +336,9 @@ class _DisclosureSidebarItem extends StatefulWidget {
   __DisclosureSidebarItemState createState() => __DisclosureSidebarItemState();
 }
 
-class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
-    with SingleTickerProviderStateMixin {
-  static final Animatable<double> _easeInTween =
-      CurveTween(curve: Curves.easeIn);
-  static final Animatable<double> _halfTween =
-      Tween<double>(begin: 0.0, end: 0.25);
+class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem> with SingleTickerProviderStateMixin {
+  static final Animatable<double> _easeInTween = CurveTween(curve: Curves.easeIn);
+  static final Animatable<double> _halfTween = Tween<double>(begin: 0.0, end: 0.25);
 
   late AnimationController _controller;
   late Animation<double> _iconTurns;
@@ -377,6 +369,7 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
           });
         });
       }
+
       PageStorage.of(context).writeState(context, _isExpanded);
     });
     // widget.onExpansionChanged?.call(_isExpanded);
@@ -399,7 +392,6 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
         labelStyle = theme.typography.title3;
         break;
     }
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,17 +400,22 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
           width: double.infinity,
           child: _SidebarItem(
             item: SidebarItem(
+              identifier: widget.item.identifier,
               label: widget.item.label,
               leading: Row(
                 children: [
-                  RotationTransition(
-                    turns: _iconTurns,
-                    child: Icon(
-                      CupertinoIcons.chevron_right,
-                      size: 12.0,
-                      color: theme.brightness == Brightness.light
-                          ? MacosColors.black
-                          : MacosColors.white,
+                  GestureDetector(
+                    onTap: _handleTap,
+                    child: Container(
+                      color: Colors.transparent,
+                      child: RotationTransition(
+                        turns: _iconTurns,
+                        child: Icon(
+                          CupertinoIcons.chevron_right,
+                          size: 12.0,
+                          color: theme.brightness == Brightness.light ? MacosColors.black : MacosColors.white,
+                        ),
+                      ),
                     ),
                   ),
                   if (hasLeading)
@@ -437,8 +434,8 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
               shape: widget.item.shape,
               trailing: widget.item.trailing,
             ),
-            onClick: _handleTap,
-            selected: false,
+            onClick: () => widget.onChanged?.call(widget.item),
+            selected: widget.item.identifier == widget.currentIdentifier,
           ),
         ),
         ClipRect(
@@ -481,11 +478,19 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
               ),
               child: SizedBox(
                 width: double.infinity,
-                child: _SidebarItem(
-                  item: item,
-                  onClick: () => widget.onChanged?.call(item),
-                  selected: widget.selectedItem == item,
-                ),
+                child: item.disclosureItems == null
+                    ? _SidebarItem(
+                        item: item,
+                        onClick: () => widget.onChanged?.call(item),
+                        selected: item.identifier == widget.currentIdentifier,
+                      )
+                    : _DisclosureSidebarItem(
+                        item: item,
+                        currentIdentifier: widget.currentIdentifier,
+                        onChanged: (item) {
+                          widget.onChanged?.call(item);
+                        },
+                      ),
               ),
             );
           }).toList(),
@@ -499,4 +504,10 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
       child: closed ? null : result,
     );
   }
+}
+
+bool debugCheckSidebarIdsUnique(List<SidebarItem> items) {
+  List<SidebarItem> expand(SidebarItem i) => [i, ...?i.disclosureItems?.expand(expand)].toList();
+  final itemIds = items.expand(expand).map((i) => i.identifier);
+  return itemIds.length == Set.of(itemIds).length;
 }

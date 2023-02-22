@@ -50,27 +50,28 @@ class _WidgetGalleryState extends State<WidgetGallery> {
   double sliderValue = 0;
   bool value = false;
 
-  int pageIndex = 0;
+  String currentIdentifier = 'buttons';
 
   late final searchFieldController = TextEditingController();
 
-  final List<Widget> pages = [
-    CupertinoTabView(
+  final Map<String, Widget> pages = {
+    'buttons': CupertinoTabView(
       builder: (_) => const ButtonsPage(),
     ),
-    const IndicatorsPage(),
-    const FieldsPage(),
-    const ColorsPage(),
-    const Center(
+    'indicators': const IndicatorsPage(),
+    'fields': const FieldsPage(),
+    'colors': const ColorsPage(),
+    'disclosure': const SizedBox(),
+    'add': const Center(
       child: MacosIcon(
         CupertinoIcons.add,
       ),
     ),
-    const DialogsPage(),
-    const ToolbarPage(),
-    const SelectorsPage(),
-    const TabViewPage(),
-  ];
+    'dialogs': const DialogsPage(),
+    'toolbar': const ToolbarPage(),
+    'selectors': const SelectorsPage(),
+    'tabview': const TabViewPage(),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -116,43 +117,43 @@ class _WidgetGalleryState extends State<WidgetGallery> {
               switch (result.searchKey) {
                 case 'Buttons':
                   setState(() {
-                    pageIndex = 0;
+                    currentIdentifier = 'buttons';
                     searchFieldController.clear();
                   });
                   break;
                 case 'Indicators':
                   setState(() {
-                    pageIndex = 1;
+                    currentIdentifier = 'indicators';
                     searchFieldController.clear();
                   });
                   break;
                 case 'Fields':
                   setState(() {
-                    pageIndex = 2;
+                    currentIdentifier = 'fields';
                     searchFieldController.clear();
                   });
                   break;
                 case 'Colors':
                   setState(() {
-                    pageIndex = 3;
+                    currentIdentifier = 'colors';
                     searchFieldController.clear();
                   });
                   break;
                 case 'Dialogs and Sheets':
                   setState(() {
-                    pageIndex = 5;
+                    currentIdentifier = 'dialogs';
                     searchFieldController.clear();
                   });
                   break;
                 case 'Toolbar':
                   setState(() {
-                    pageIndex = 6;
+                    currentIdentifier = 'toolbar';
                     searchFieldController.clear();
                   });
                   break;
                 case 'Selectors':
                   setState(() {
-                    pageIndex = 7;
+                    currentIdentifier = 'selectors';
                     searchFieldController.clear();
                   });
                   break;
@@ -173,12 +174,13 @@ class _WidgetGalleryState extends State<WidgetGallery> {
           minWidth: 200,
           builder: (context, scrollController) {
             return SidebarItems(
-              currentIndex: pageIndex,
-              onChanged: (i) => setState(() => pageIndex = i),
+              currentIdentifier: currentIdentifier,
+              onChanged: (i) => setState(() => currentIdentifier = i),
               scrollController: scrollController,
               itemSize: SidebarItemSize.large,
               items: [
                 const SidebarItem(
+                  identifier: 'buttons',
                   // leading: MacosIcon(CupertinoIcons.square_on_circle),
                   leading: MacosImageIcon(
                     AssetImage(
@@ -188,6 +190,7 @@ class _WidgetGalleryState extends State<WidgetGallery> {
                   label: Text('Buttons'),
                 ),
                 const SidebarItem(
+                  identifier: 'indicators',
                   leading: MacosImageIcon(
                     AssetImage(
                       'assets/sf_symbols/lines_measurement_horizontal_2x.png',
@@ -196,6 +199,7 @@ class _WidgetGalleryState extends State<WidgetGallery> {
                   label: Text('Indicators'),
                 ),
                 const SidebarItem(
+                  identifier: 'fields',
                   leading: MacosImageIcon(
                     AssetImage(
                       'assets/sf_symbols/character_cursor_ibeam_2x.png',
@@ -204,10 +208,11 @@ class _WidgetGalleryState extends State<WidgetGallery> {
                   label: Text('Fields'),
                 ),
                 SidebarItem(
+                  identifier: 'disclosure',
                   leading: const MacosIcon(CupertinoIcons.folder),
                   label: const Text('Disclosure'),
                   trailing: Text(
-                    '2',
+                    '',
                     style: TextStyle(
                       color: MacosTheme.brightnessOf(context) == Brightness.dark
                           ? MacosColors.tertiaryLabelColor.darkColor
@@ -216,6 +221,7 @@ class _WidgetGalleryState extends State<WidgetGallery> {
                   ),
                   disclosureItems: [
                     const SidebarItem(
+                      identifier: 'colors',
                       leading: MacosImageIcon(
                         AssetImage(
                           'assets/sf_symbols/rectangle_3_group_2x.png',
@@ -224,20 +230,24 @@ class _WidgetGalleryState extends State<WidgetGallery> {
                       label: Text('Colors'),
                     ),
                     const SidebarItem(
+                      identifier: 'add',
                       leading: MacosIcon(CupertinoIcons.infinite),
                       label: Text('Item 3'),
                     ),
                   ],
                 ),
                 const SidebarItem(
+                  identifier: 'dialogs',
                   leading: MacosIcon(CupertinoIcons.square_on_square),
                   label: Text('Dialogs & Sheets'),
                 ),
                 const SidebarItem(
+                  identifier: 'toolbar',
                   leading: MacosIcon(CupertinoIcons.macwindow),
                   label: Text('Toolbar'),
                 ),
                 const SidebarItem(
+                  identifier: 'selectors',
                   leading: MacosImageIcon(
                     AssetImage(
                       'assets/sf_symbols/filemenu_and_selection_2x.png',
@@ -246,6 +256,7 @@ class _WidgetGalleryState extends State<WidgetGallery> {
                   label: Text('Selectors'),
                 ),
                 const SidebarItem(
+                  identifier: 'tabview',
                   leading: MacosIcon(CupertinoIcons.uiwindow_split_2x1),
                   label: Text('TabView'),
                 ),
@@ -269,10 +280,7 @@ class _WidgetGalleryState extends State<WidgetGallery> {
             );
           },
         ),
-        child: IndexedStack(
-          index: pageIndex,
-          children: pages,
-        ),
+        child: pages[currentIdentifier],
       ),
     );
   }
