@@ -250,7 +250,7 @@ class _SidebarItem extends StatelessWidget {
         break;
     }
 
-    return Semantics(
+    final widget = Semantics(
       label: item.semanticLabel,
       button: true,
       focusable: true,
@@ -312,6 +312,9 @@ class _SidebarItem extends StatelessWidget {
         ),
       ),
     );
+    final builder = item.builder;
+    if (builder == null) return widget;
+    return Builder(builder: (context) => builder(context, widget));
   }
 }
 

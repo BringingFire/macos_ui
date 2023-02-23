@@ -20,7 +20,11 @@ class SidebarItem with Diagnosticable {
     this.semanticLabel,
     this.disclosureItems,
     this.trailing,
+    this.builder,
   });
+
+  /// A builder that will be used to wrap the sidebar item widget if provided.
+  final Function(BuildContext, Widget)? builder;
 
   /// Arbitrary identifier for this sidebar item. Must be unique among all
   /// sidebar items, including nested disclosure items.
