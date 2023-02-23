@@ -261,7 +261,7 @@ class _SidebarItem extends StatelessWidget {
         onTap: onClick,
         child: FocusableActionDetector(
           focusNode: item.focusNode,
-          descendantsAreFocusable: false,
+          descendantsAreFocusable: true,
           enabled: onClick != null,
           //mouseCursor: SystemMouseCursors.basic,
           actions: _actionMap,
@@ -289,21 +289,23 @@ class _SidebarItem extends StatelessWidget {
                       child: item.leading!,
                     ),
                   ),
-                DefaultTextStyle(
-                  style: labelStyle.copyWith(
-                    color: selected ? textLuminance(selectedColor) : null,
+                Expanded(
+                  child: DefaultTextStyle(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: labelStyle.copyWith(
+                      color: selected ? textLuminance(selectedColor) : null,
+                    ),
+                    child: item.label,
                   ),
-                  child: item.label,
                 ),
-                if (hasTrailing) ...[
-                  const Spacer(),
+                if (hasTrailing)
                   DefaultTextStyle(
                     style: labelStyle.copyWith(
                       color: selected ? textLuminance(selectedColor) : null,
                     ),
                     child: item.trailing!,
                   ),
-                ],
               ],
             ),
           ),
