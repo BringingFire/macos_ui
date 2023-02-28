@@ -55,6 +55,7 @@ class SidebarItems extends StatelessWidget {
     this.unselectedColor,
     this.shape,
     this.cursor = SystemMouseCursors.basic,
+    this.onReordered,
   });
 
   /// The [SidebarItem]s used by the sidebar. If no items are provided,
@@ -96,17 +97,8 @@ class SidebarItems extends StatelessWidget {
   /// Defaults to [SystemMouseCursors.basic].
   final MouseCursor? cursor;
 
-  List<SidebarItem> get _allItems {
-    List<SidebarItem> result = [];
-    for (var element in items) {
-      if (element.disclosureItems != null) {
-        result.addAll(element.disclosureItems!);
-      } else {
-        result.add(element);
-      }
-    }
-    return result;
-  }
+  /// Callback that runs when a sidebar item is dragged to a new position.
+  final void Function(String reorderedId, String? movedAbove, String? movedBelow)? onReordered;
 
   @override
   Widget build(BuildContext context) {
@@ -133,6 +125,7 @@ class SidebarItems extends StatelessWidget {
                 cursor: cursor!,
                 child: _DisclosureSidebarItem(
                   item: item,
+                  onReordered: onReordered,
                   currentIdentifier: currentIdentifier,
                   onChanged: (item) {
                     onChanged(item.identifier);
@@ -144,6 +137,7 @@ class SidebarItems extends StatelessWidget {
               cursor: cursor!,
               child: _SidebarItem(
                 item: item,
+                onReordered: onReordered,
                 selected: item.identifier == currentIdentifier,
                 onClick: () => onChanged(item.identifier),
               ),
@@ -171,8 +165,12 @@ class _SidebarItemsConfiguration extends InheritedWidget {
   final ShapeBorder shape;
   final SidebarItemSize itemSize;
 
+  static _SidebarItemsConfiguration? _latestConfig;
+
   static _SidebarItemsConfiguration of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<_SidebarItemsConfiguration>()!;
+    final currentConfig = context.dependOnInheritedWidgetOfExactType<_SidebarItemsConfiguration>();
+    if (currentConfig != null) _latestConfig = currentConfig;
+    return _latestConfig!;
   }
 
   @override
@@ -190,6 +188,8 @@ class _SidebarItem extends StatelessWidget {
     required this.item,
     required this.onClick,
     required this.selected,
+    this.onReordered,
+    this.isLastDisclousureItem,
   }) : super(key: key);
 
   /// The widget to lay out first.
@@ -204,6 +204,13 @@ class _SidebarItem extends StatelessWidget {
   ///
   /// Typically a [Navigator] call
   final VoidCallback? onClick;
+
+  /// Callback that runs when a sidebar item is dragged to a new position.
+  final void Function(String reorderedId, String? movedAbove, String? movedBelow)? onReordered;
+
+  /// Use to render a DropTarget below the item if it is the last on the list of
+  /// disclousure items of a _DisclosureSidebarItem.
+  final bool? isLastDisclousureItem;
 
   void _handleActionTap() async {
     onClick?.call();
@@ -250,7 +257,7 @@ class _SidebarItem extends StatelessWidget {
         break;
     }
 
-    final widget = Semantics(
+    final baseWidget = Semantics(
       label: item.semanticLabel,
       button: true,
       focusable: true,
@@ -312,6 +319,47 @@ class _SidebarItem extends StatelessWidget {
         ),
       ),
     );
+
+    Widget? draggableWidget() {
+      if (onReordered == null) return null;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          DragTarget<String>(
+            onWillAccept: (data) => data != item.identifier,
+            onAccept: (data) => onReordered!(data, item.identifier, null),
+            builder: (context, accepted, rejected) {
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 100),
+                height: accepted.isNotEmpty ? itemSize.height + theme.visualDensity.vertical : 10,
+                color: Colors.transparent,
+              );
+            },
+          ),
+          Draggable<String>(
+            data: item.identifier,
+            axis: Axis.vertical,
+            feedback: baseWidget,
+            childWhenDragging: Opacity(opacity: 0.5, child: baseWidget),
+            child: baseWidget,
+          ),
+          if (isLastDisclousureItem == true)
+            DragTarget<String>(
+              onWillAccept: (data) => data != item.identifier,
+              onAccept: (data) => onReordered!(data, null, item.identifier),
+              builder: (context, accepted, rejected) {
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 100),
+                  height: accepted.isNotEmpty ? itemSize.height + theme.visualDensity.vertical : 10,
+                  color: Colors.transparent,
+                );
+              },
+            ),
+        ],
+      );
+    }
+
+    final widget = draggableWidget() ?? baseWidget;
     final builder = item.builder;
     if (builder == null) return widget;
     return Builder(builder: (context) => builder(context, widget));
@@ -325,6 +373,8 @@ class _DisclosureSidebarItem extends StatefulWidget {
     required this.item,
     required this.currentIdentifier,
     this.onChanged,
+    this.onReordered,
+    this.isLastDisclousureItem,
   })  : assert(item.disclosureItems != null),
         super(key: key);
 
@@ -336,6 +386,13 @@ class _DisclosureSidebarItem extends StatefulWidget {
   ///
   /// Typically a [Navigator] call
   final ValueChanged<SidebarItem>? onChanged;
+
+  /// Callback that runs when a sidebar item is dragged to a new position.
+  final void Function(String reorderedId, String? movedAbove, String? movedBelow)? onReordered;
+
+  /// Use to render a DropTarget below the item if it is the last on the list of
+  /// disclousure items of a _DisclosureSidebarItem.
+  final bool? isLastDisclousureItem;
 
   @override
   __DisclosureSidebarItemState createState() => __DisclosureSidebarItemState();
@@ -404,6 +461,7 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem> with Si
         SizedBox(
           width: double.infinity,
           child: _SidebarItem(
+            onReordered: widget.onReordered,
             item: SidebarItem(
               identifier: widget.item.identifier,
               label: widget.item.label,
@@ -486,12 +544,16 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem> with Si
                 child: item.disclosureItems == null
                     ? _SidebarItem(
                         item: item,
+                        onReordered: widget.onReordered,
+                        isLastDisclousureItem: widget.item.disclosureItems!.last == item,
                         onClick: () => widget.onChanged?.call(item),
                         selected: item.identifier == widget.currentIdentifier,
                       )
                     : _DisclosureSidebarItem(
                         item: item,
                         currentIdentifier: widget.currentIdentifier,
+                        onReordered: widget.onReordered,
+                        isLastDisclousureItem: widget.item.disclosureItems!.last == item,
                         onChanged: (item) {
                           widget.onChanged?.call(item);
                         },
