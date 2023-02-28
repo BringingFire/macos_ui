@@ -54,6 +54,7 @@ class SidebarItems extends StatelessWidget {
     this.selectedColor,
     this.unselectedColor,
     this.shape,
+    this.onReorder,
     this.cursor = SystemMouseCursors.basic,
   });
 
@@ -96,17 +97,7 @@ class SidebarItems extends StatelessWidget {
   /// Defaults to [SystemMouseCursors.basic].
   final MouseCursor? cursor;
 
-  List<SidebarItem> get _allItems {
-    List<SidebarItem> result = [];
-    for (var element in items) {
-      if (element.disclosureItems != null) {
-        result.addAll(element.disclosureItems!);
-      } else {
-        result.add(element);
-      }
-    }
-    return result;
-  }
+  final void Function(int oldIndex, int newIndex)? onReorder;
 
   @override
   Widget build(BuildContext context) {
@@ -122,30 +113,43 @@ class SidebarItems extends StatelessWidget {
         unselectedColor: unselectedColor ?? MacosColors.transparent,
         shape: shape ?? _defaultShape,
         itemSize: itemSize,
-        child: ListView(
-          controller: scrollController,
+        child: ReorderableListView(
+          scrollController: scrollController,
+          onReorder: onReorder ?? (_, __) {},
+          buildDefaultDragHandles: false,
           physics: const ClampingScrollPhysics(),
           padding: EdgeInsets.all(10.0 - theme.visualDensity.horizontal),
           children: List.generate(items.length, (index) {
+            final bool enableReorder = onReorder != null;
             final item = items[index];
             if (item.disclosureItems != null) {
-              return MouseRegion(
-                cursor: cursor!,
-                child: _DisclosureSidebarItem(
-                  item: item,
-                  currentIdentifier: currentIdentifier,
-                  onChanged: (item) {
-                    onChanged(item.identifier);
-                  },
+              return ReorderableDragStartListener(
+                key: ValueKey(item),
+                enabled: enableReorder,
+                index: index,
+                child: MouseRegion(
+                  cursor: cursor!,
+                  child: _DisclosureSidebarItem(
+                    item: item,
+                    currentIdentifier: currentIdentifier,
+                    onChanged: (item) {
+                      onChanged(item.identifier);
+                    },
+                  ),
                 ),
               );
             }
-            return MouseRegion(
-              cursor: cursor!,
-              child: _SidebarItem(
-                item: item,
-                selected: item.identifier == currentIdentifier,
-                onClick: () => onChanged(item.identifier),
+            return ReorderableDragStartListener(
+              key: ValueKey(item),
+              enabled: enableReorder,
+              index: index,
+              child: MouseRegion(
+                cursor: cursor!,
+                child: _SidebarItem(
+                  item: item,
+                  selected: item.identifier == currentIdentifier,
+                  onClick: () => onChanged(item.identifier),
+                ),
               ),
             );
           }),

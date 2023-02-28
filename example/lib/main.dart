@@ -73,6 +73,100 @@ class _WidgetGalleryState extends State<WidgetGallery> {
     'tabview': const TabViewPage(),
   };
 
+  late final List<SidebarItem> sideMenuItems = [
+    const SidebarItem(
+      identifier: 'buttons',
+      // leading: MacosIcon(CupertinoIcons.square_on_circle),
+      leading: MacosImageIcon(
+        AssetImage(
+          'assets/sf_symbols/button_programmable_2x.png',
+        ),
+      ),
+      label: Text('Buttons'),
+    ),
+    const SidebarItem(
+      identifier: 'indicators',
+      leading: MacosImageIcon(
+        AssetImage(
+          'assets/sf_symbols/lines_measurement_horizontal_2x.png',
+        ),
+      ),
+      label: Text('Indicators'),
+    ),
+    const SidebarItem(
+      identifier: 'fields',
+      leading: MacosImageIcon(
+        AssetImage(
+          'assets/sf_symbols/character_cursor_ibeam_2x.png',
+        ),
+      ),
+      label: Text('Fields'),
+    ),
+    SidebarItem(
+      identifier: 'disclosure',
+      leading: const MacosIcon(CupertinoIcons.folder),
+      label: const Text('Disclosure'),
+      trailing: Text(
+        '',
+        style: TextStyle(
+          color: MacosTheme.brightnessOf(context) == Brightness.dark
+              ? MacosColors.tertiaryLabelColor.darkColor
+              : MacosColors.tertiaryLabelColor,
+        ),
+      ),
+      disclosureItems: [
+        const SidebarItem(
+          identifier: 'colors',
+          leading: MacosImageIcon(
+            AssetImage(
+              'assets/sf_symbols/rectangle_3_group_2x.png',
+            ),
+          ),
+          label: Text('Colors'),
+        ),
+        const SidebarItem(
+          identifier: 'add',
+          leading: MacosIcon(CupertinoIcons.infinite),
+          label: Text('Item 3'),
+        ),
+      ],
+    ),
+    const SidebarItem(
+      identifier: 'dialogs',
+      leading: MacosIcon(CupertinoIcons.square_on_square),
+      label: Text('Dialogs & Sheets'),
+    ),
+    const SidebarItem(
+      identifier: 'toolbar',
+      leading: MacosIcon(CupertinoIcons.macwindow),
+      label: Text('Toolbar'),
+    ),
+    const SidebarItem(
+      identifier: 'selectors',
+      leading: MacosImageIcon(
+        AssetImage(
+          'assets/sf_symbols/filemenu_and_selection_2x.png',
+        ),
+      ),
+      label: Text('Selectors'),
+    ),
+    const SidebarItem(
+      identifier: 'tabview',
+      leading: MacosIcon(CupertinoIcons.uiwindow_split_2x1),
+      label: Text('TabView'),
+    ),
+  ];
+
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      if (oldIndex < newIndex) {
+        newIndex -= 1;
+      }
+      final SidebarItem item = sideMenuItems.removeAt(oldIndex);
+      sideMenuItems.insert(newIndex, item);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return PlatformMenuBar(
@@ -177,90 +271,9 @@ class _WidgetGalleryState extends State<WidgetGallery> {
               currentIdentifier: currentIdentifier,
               onChanged: (i) => setState(() => currentIdentifier = i),
               scrollController: scrollController,
+              onReorder: _onReorder,
               itemSize: SidebarItemSize.large,
-              items: [
-                const SidebarItem(
-                  identifier: 'buttons',
-                  // leading: MacosIcon(CupertinoIcons.square_on_circle),
-                  leading: MacosImageIcon(
-                    AssetImage(
-                      'assets/sf_symbols/button_programmable_2x.png',
-                    ),
-                  ),
-                  label: Text('Buttons'),
-                ),
-                const SidebarItem(
-                  identifier: 'indicators',
-                  leading: MacosImageIcon(
-                    AssetImage(
-                      'assets/sf_symbols/lines_measurement_horizontal_2x.png',
-                    ),
-                  ),
-                  label: Text('Indicators'),
-                ),
-                const SidebarItem(
-                  identifier: 'fields',
-                  leading: MacosImageIcon(
-                    AssetImage(
-                      'assets/sf_symbols/character_cursor_ibeam_2x.png',
-                    ),
-                  ),
-                  label: Text('Fields'),
-                ),
-                SidebarItem(
-                  identifier: 'disclosure',
-                  leading: const MacosIcon(CupertinoIcons.folder),
-                  label: const Text('Disclosure'),
-                  trailing: Text(
-                    '',
-                    style: TextStyle(
-                      color: MacosTheme.brightnessOf(context) == Brightness.dark
-                          ? MacosColors.tertiaryLabelColor.darkColor
-                          : MacosColors.tertiaryLabelColor,
-                    ),
-                  ),
-                  disclosureItems: [
-                    const SidebarItem(
-                      identifier: 'colors',
-                      leading: MacosImageIcon(
-                        AssetImage(
-                          'assets/sf_symbols/rectangle_3_group_2x.png',
-                        ),
-                      ),
-                      label: Text('Colors'),
-                    ),
-                    const SidebarItem(
-                      identifier: 'add',
-                      leading: MacosIcon(CupertinoIcons.infinite),
-                      label: Text('Item 3'),
-                    ),
-                  ],
-                ),
-                const SidebarItem(
-                  identifier: 'dialogs',
-                  leading: MacosIcon(CupertinoIcons.square_on_square),
-                  label: Text('Dialogs & Sheets'),
-                ),
-                const SidebarItem(
-                  identifier: 'toolbar',
-                  leading: MacosIcon(CupertinoIcons.macwindow),
-                  label: Text('Toolbar'),
-                ),
-                const SidebarItem(
-                  identifier: 'selectors',
-                  leading: MacosImageIcon(
-                    AssetImage(
-                      'assets/sf_symbols/filemenu_and_selection_2x.png',
-                    ),
-                  ),
-                  label: Text('Selectors'),
-                ),
-                const SidebarItem(
-                  identifier: 'tabview',
-                  leading: MacosIcon(CupertinoIcons.uiwindow_split_2x1),
-                  label: Text('TabView'),
-                ),
-              ],
+              items: sideMenuItems,
             );
           },
           bottom: const MacosListTile(
