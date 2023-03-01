@@ -98,7 +98,8 @@ class SidebarItems extends StatelessWidget {
   final MouseCursor? cursor;
 
   /// Callback that runs when a sidebar item is dragged to a new position.
-  final void Function(String reorderedId, String? movedAbove, String? movedBelow)? onReordered;
+  final void Function(
+      String reorderedId, String droppedAt, DropAffinity affinity)? onReordered;
 
   @override
   Widget build(BuildContext context) {
@@ -168,7 +169,8 @@ class _SidebarItemsConfiguration extends InheritedWidget {
   static _SidebarItemsConfiguration? _latestConfig;
 
   static _SidebarItemsConfiguration of(BuildContext context) {
-    final currentConfig = context.dependOnInheritedWidgetOfExactType<_SidebarItemsConfiguration>();
+    final currentConfig = context
+        .dependOnInheritedWidgetOfExactType<_SidebarItemsConfiguration>();
     if (currentConfig != null) _latestConfig = currentConfig;
     return _latestConfig!;
   }
@@ -206,7 +208,8 @@ class _SidebarItem extends StatelessWidget {
   final VoidCallback? onClick;
 
   /// Callback that runs when a sidebar item is dragged to a new position.
-  final void Function(String reorderedId, String? movedAbove, String? movedBelow)? onReordered;
+  final void Function(
+      String reorderedId, String droppedAt, DropAffinity affinity)? onReordered;
 
   /// Use to render a DropTarget below the item if it is the last on the list of
   /// disclousure items of a _DisclosureSidebarItem.
@@ -234,11 +237,13 @@ class _SidebarItem extends StatelessWidget {
     final theme = MacosTheme.of(context);
 
     final selectedColor = MacosDynamicColor.resolve(
-      item.selectedColor ?? _SidebarItemsConfiguration.of(context).selectedColor,
+      item.selectedColor ??
+          _SidebarItemsConfiguration.of(context).selectedColor,
       context,
     );
     final unselectedColor = MacosDynamicColor.resolve(
-      item.unselectedColor ?? _SidebarItemsConfiguration.of(context).unselectedColor,
+      item.unselectedColor ??
+          _SidebarItemsConfiguration.of(context).unselectedColor,
       context,
     );
 
@@ -290,7 +295,9 @@ class _SidebarItem extends StatelessWidget {
                     padding: EdgeInsets.only(right: spacing),
                     child: MacosIconTheme.merge(
                       data: MacosIconThemeData(
-                        color: selected ? MacosColors.white : MacosColors.controlAccentColor,
+                        color: selected
+                            ? MacosColors.white
+                            : MacosColors.controlAccentColor,
                         size: itemSize.iconSize,
                       ),
                       child: item.leading!,
@@ -322,38 +329,93 @@ class _SidebarItem extends StatelessWidget {
 
     Widget? draggableWidget() {
       if (onReordered == null) return null;
+
+      final feedback = Container(
+        width: 134.0 + theme.visualDensity.horizontal,
+        height: itemSize.height + theme.visualDensity.vertical,
+        decoration: ShapeDecoration(
+          shape: item.shape ?? _SidebarItemsConfiguration.of(context).shape,
+        ),
+        padding: EdgeInsets.symmetric(
+          vertical: 7 + theme.visualDensity.horizontal,
+          horizontal: spacing,
+        ),
+        child: Row(
+          children: [
+            if (hasLeading)
+              Padding(
+                padding: EdgeInsets.only(right: spacing),
+                child: MacosIconTheme.merge(
+                  data: MacosIconThemeData(
+                    color: selected
+                        ? MacosColors.white
+                        : MacosColors.controlAccentColor,
+                    size: itemSize.iconSize,
+                  ),
+                  child: item.leading!,
+                ),
+              ),
+            Expanded(
+              child: DefaultTextStyle(
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: labelStyle!.copyWith(
+                  color: selected ? textLuminance(selectedColor) : null,
+                ),
+                child: item.label,
+              ),
+            ),
+          ],
+        ),
+      );
+      Widget dropTarget({required bool renderDivider}) {
+        return Container(
+            height: 8,
+            color: Colors.transparent,
+            child: renderDivider
+                ? Center(
+                    child: Container(
+                        height: 2, color: MacosColors.controlAccentColor),
+                  )
+                : null);
+      }
+
+      final renderDragTarget = [
+        SidebarItemDragBehavior.dragAndDrop,
+        SidebarItemDragBehavior.dropOnly
+      ].contains(item.dragBehavior);
+      final renderDraggable = [
+        SidebarItemDragBehavior.dragAndDrop,
+        SidebarItemDragBehavior.dragOnly
+      ].contains(item.dragBehavior);
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          DragTarget<String>(
-            onWillAccept: (data) => data != item.identifier,
-            onAccept: (data) => onReordered!(data, item.identifier, null),
-            builder: (context, accepted, rejected) {
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
-                height: accepted.isNotEmpty ? itemSize.height + theme.visualDensity.vertical : 10,
-                color: Colors.transparent,
-              );
-            },
-          ),
-          Draggable<String>(
-            data: item.identifier,
-            axis: Axis.vertical,
-            feedback: baseWidget,
-            childWhenDragging: Opacity(opacity: 0.5, child: baseWidget),
-            child: baseWidget,
-          ),
-          if (isLastDisclousureItem == true)
+          if (renderDragTarget)
             DragTarget<String>(
               onWillAccept: (data) => data != item.identifier,
-              onAccept: (data) => onReordered!(data, null, item.identifier),
-              builder: (context, accepted, rejected) {
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
-                  height: accepted.isNotEmpty ? itemSize.height + theme.visualDensity.vertical : 10,
-                  color: Colors.transparent,
-                );
-              },
+              onAccept: (data) =>
+                  onReordered!(data, item.identifier, DropAffinity.above),
+              builder: (context, accepted, rejected) =>
+                  dropTarget(renderDivider: accepted.isNotEmpty),
+            ),
+          renderDraggable
+              ? Draggable<String>(
+                  data: item.identifier,
+                  axis: Axis.vertical,
+                  feedback: feedback,
+                  childWhenDragging: Opacity(opacity: 0.5, child: baseWidget),
+                  child: baseWidget,
+                )
+              : baseWidget,
+          if (isLastDisclousureItem == true && renderDragTarget)
+            DragTarget<String>(
+              onWillAccept: (data) => data != item.identifier,
+              onAccept: (data) =>
+                  onReordered!(data, item.identifier, DropAffinity.below),
+              builder: (context, accepted, rejected) =>
+                  dropTarget(renderDivider: accepted.isNotEmpty),
             ),
         ],
       );
@@ -388,7 +450,8 @@ class _DisclosureSidebarItem extends StatefulWidget {
   final ValueChanged<SidebarItem>? onChanged;
 
   /// Callback that runs when a sidebar item is dragged to a new position.
-  final void Function(String reorderedId, String? movedAbove, String? movedBelow)? onReordered;
+  final void Function(
+      String reorderedId, String droppedAt, DropAffinity affinity)? onReordered;
 
   /// Use to render a DropTarget below the item if it is the last on the list of
   /// disclousure items of a _DisclosureSidebarItem.
@@ -398,9 +461,12 @@ class _DisclosureSidebarItem extends StatefulWidget {
   __DisclosureSidebarItemState createState() => __DisclosureSidebarItemState();
 }
 
-class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem> with SingleTickerProviderStateMixin {
-  static final Animatable<double> _easeInTween = CurveTween(curve: Curves.easeIn);
-  static final Animatable<double> _halfTween = Tween<double>(begin: 0.0, end: 0.25);
+class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
+    with SingleTickerProviderStateMixin {
+  static final Animatable<double> _easeInTween =
+      CurveTween(curve: Curves.easeIn);
+  static final Animatable<double> _halfTween =
+      Tween<double>(begin: 0.0, end: 0.25);
 
   late AnimationController _controller;
   late Animation<double> _iconTurns;
@@ -476,7 +542,9 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem> with Si
                         child: Icon(
                           CupertinoIcons.chevron_right,
                           size: 12.0,
-                          color: theme.brightness == Brightness.light ? MacosColors.black : MacosColors.white,
+                          color: theme.brightness == Brightness.light
+                              ? MacosColors.black
+                              : MacosColors.white,
                         ),
                       ),
                     ),
@@ -545,7 +613,8 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem> with Si
                     ? _SidebarItem(
                         item: item,
                         onReordered: widget.onReordered,
-                        isLastDisclousureItem: widget.item.disclosureItems!.last == item,
+                        isLastDisclousureItem:
+                            widget.item.disclosureItems!.last == item,
                         onClick: () => widget.onChanged?.call(item),
                         selected: item.identifier == widget.currentIdentifier,
                       )
@@ -553,7 +622,8 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem> with Si
                         item: item,
                         currentIdentifier: widget.currentIdentifier,
                         onReordered: widget.onReordered,
-                        isLastDisclousureItem: widget.item.disclosureItems!.last == item,
+                        isLastDisclousureItem:
+                            widget.item.disclosureItems!.last == item,
                         onChanged: (item) {
                           widget.onChanged?.call(item);
                         },
@@ -574,7 +644,10 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem> with Si
 }
 
 bool debugCheckSidebarIdsUnique(List<SidebarItem> items) {
-  List<SidebarItem> expand(SidebarItem i) => [i, ...?i.disclosureItems?.expand(expand)].toList();
+  List<SidebarItem> expand(SidebarItem i) =>
+      [i, ...?i.disclosureItems?.expand(expand)].toList();
   final itemIds = items.expand(expand).map((i) => i.identifier);
   return itemIds.length == Set.of(itemIds).length;
 }
+
+enum DropAffinity { above, below }

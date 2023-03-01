@@ -21,6 +21,7 @@ class SidebarItem with Diagnosticable {
     this.disclosureItems,
     this.trailing,
     this.builder,
+    this.dragBehavior = SidebarItemDragBehavior.dragAndDrop,
   });
 
   /// A builder that will be used to wrap the sidebar item widget if provided.
@@ -73,6 +74,10 @@ class SidebarItem with Diagnosticable {
   /// {@image <img src="https://imgur.com/REpW9f9.png" height="88" width="219" />}
   final Widget? trailing;
 
+  /// Defines if the sidebar item will accept incoming dragged sidebar items and if
+  /// itself will be draggable, defaults to SidebarItemDragBehavior.dragAndDrop.
+  final SidebarItemDragBehavior dragBehavior;
+
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
@@ -86,5 +91,9 @@ class SidebarItem with Diagnosticable {
       disclosureItems,
     ));
     properties.add(DiagnosticsProperty<Widget?>('trailing', trailing));
+    properties.add(DiagnosticsProperty<SidebarItemDragBehavior>(
+        'dragBehavior', dragBehavior));
   }
 }
+
+enum SidebarItemDragBehavior { dragAndDrop, dragOnly, dropOnly, none }
