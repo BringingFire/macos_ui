@@ -530,6 +530,7 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
             onReordered: widget.onReordered,
             item: SidebarItem(
               identifier: widget.item.identifier,
+              dragBehavior: widget.item.dragBehavior,
               label: widget.item.label,
               leading: Row(
                 children: [
