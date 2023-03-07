@@ -231,6 +231,11 @@ class _SidebarItem extends StatelessWidget {
   bool get hasLeading => item.leading != null;
   bool get hasTrailing => item.trailing != null;
 
+  bool _onWillAccept(String? identifier) {
+    final accepted = item.onWillAccept?.call(identifier) ?? true;
+    return (identifier != item.identifier && accepted);
+  }
+
   @override
   Widget build(BuildContext context) {
     assert(debugCheckHasMacosTheme(context));
@@ -394,7 +399,7 @@ class _SidebarItem extends StatelessWidget {
         children: [
           if (renderDragTarget)
             DragTarget<String>(
-              onWillAccept: (data) => data != item.identifier,
+              onWillAccept: _onWillAccept,
               onAccept: (data) =>
                   onReordered!(data, item.identifier, DropAffinity.above),
               builder: (context, accepted, rejected) =>
@@ -411,7 +416,7 @@ class _SidebarItem extends StatelessWidget {
               : baseWidget,
           if (isLastDisclousureItem == true && renderDragTarget)
             DragTarget<String>(
-              onWillAccept: (data) => data != item.identifier,
+              onWillAccept: _onWillAccept,
               onAccept: (data) =>
                   onReordered!(data, item.identifier, DropAffinity.below),
               builder: (context, accepted, rejected) =>
@@ -531,6 +536,7 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
             item: SidebarItem(
               identifier: widget.item.identifier,
               dragBehavior: widget.item.dragBehavior,
+              onWillAccept: widget.item.onWillAccept,
               label: widget.item.label,
               leading: Row(
                 children: [
