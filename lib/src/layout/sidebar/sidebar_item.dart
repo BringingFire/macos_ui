@@ -21,6 +21,7 @@ class SidebarItem with Diagnosticable {
     this.disclosureItems,
     this.trailing,
     this.builder,
+    this.onWillAccept,
     this.dragBehavior = SidebarItemDragBehavior.dragAndDrop,
   });
 
@@ -77,6 +78,9 @@ class SidebarItem with Diagnosticable {
   /// Defines if the sidebar item will accept incoming dragged sidebar items and if
   /// itself will be draggable, defaults to SidebarItemDragBehavior.dragAndDrop.
   final SidebarItemDragBehavior dragBehavior;
+
+  /// Callback to accept reorder change.
+  final bool Function(String? identifier)? onWillAccept;
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
