@@ -396,36 +396,43 @@ class _SidebarItem extends StatelessWidget {
         SidebarItemDragBehavior.dragOnly
       ].contains(item.dragBehavior);
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (renderDragTarget)
-            DragTarget<String>(
-              onWillAccept: _onWillAccept,
-              onAccept: (data) =>
-                  onReordered!(data, item.identifier, DropAffinity.above),
-              builder: (context, accepted, rejected) =>
-                  dropTarget(renderDivider: accepted.isNotEmpty),
-            ),
-          renderDraggable
-              ? Draggable<String>(
-                  data: item.identifier,
-                  axis: Axis.vertical,
-                  feedback: feedback,
-                  childWhenDragging: Opacity(opacity: 0.5, child: baseWidget),
-                  child: baseWidget,
-                )
-              : baseWidget,
-          if (isLastDisclousureItem == true && renderDragTarget)
-            DragTarget<String>(
-              onWillAccept: _onWillAccept,
-              onAccept: (data) =>
-                  onReordered!(data, item.identifier, DropAffinity.below),
-              builder: (context, accepted, rejected) =>
-                  dropTarget(renderDivider: accepted.isNotEmpty),
-            ),
-        ],
-      );
+      return DragTarget<String>(
+          onWillAccept: _onWillAccept,
+          onAccept: (data) =>
+              onReordered!(data, item.identifier, DropAffinity.inside),
+          builder: (context, accepted, rejected) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (renderDragTarget)
+                  DragTarget<String>(
+                    onWillAccept: _onWillAccept,
+                    onAccept: (data) =>
+                        onReordered!(data, item.identifier, DropAffinity.above),
+                    builder: (context, accepted, rejected) =>
+                        dropTarget(renderDivider: accepted.isNotEmpty),
+                  ),
+                renderDraggable
+                    ? Draggable<String>(
+                        data: item.identifier,
+                        axis: Axis.vertical,
+                        feedback: feedback,
+                        childWhenDragging:
+                            Opacity(opacity: 0.5, child: baseWidget),
+                        child: baseWidget,
+                      )
+                    : baseWidget,
+                if (isLastDisclousureItem == true && renderDragTarget)
+                  DragTarget<String>(
+                    onWillAccept: _onWillAccept,
+                    onAccept: (data) =>
+                        onReordered!(data, item.identifier, DropAffinity.below),
+                    builder: (context, accepted, rejected) =>
+                        dropTarget(renderDivider: accepted.isNotEmpty),
+                  ),
+              ],
+            );
+          });
     }
 
     final widget = draggableWidget() ?? baseWidget;
@@ -664,4 +671,4 @@ bool debugCheckSidebarIdsUnique(List<SidebarItem> items) {
   return itemIds.length == Set.of(itemIds).length;
 }
 
-enum DropAffinity { above, below }
+enum DropAffinity { above, below, inside }
