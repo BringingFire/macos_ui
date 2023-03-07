@@ -125,6 +125,7 @@ class SidebarItems extends StatelessWidget {
               return MouseRegion(
                 cursor: cursor!,
                 child: _DisclosureSidebarItem(
+                  key: ValueKey(item.identifier),
                   item: item,
                   onReordered: onReordered,
                   currentIdentifier: currentIdentifier,
@@ -137,6 +138,7 @@ class SidebarItems extends StatelessWidget {
             return MouseRegion(
               cursor: cursor!,
               child: _SidebarItem(
+                key: ValueKey(item.identifier),
                 item: item,
                 onReordered: onReordered,
                 selected: item.identifier == currentIdentifier,
@@ -611,6 +613,7 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: widget.item.disclosureItems!.map((item) {
             return Padding(
+              key: ValueKey(item.identifier),
               padding: EdgeInsets.only(
                 left: 24.0 + theme.visualDensity.horizontal,
               ),
