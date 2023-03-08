@@ -184,7 +184,7 @@ class _SidebarItemsConfiguration extends InheritedWidget {
 }
 
 /// A macOS style navigation-list item intended for use in a [Sidebar]
-class _SidebarItem extends StatelessWidget {
+class _SidebarItem extends StatefulWidget {
   /// Builds a [_SidebarItem].
   // ignore: use_super_parameters
   const _SidebarItem({
@@ -217,8 +217,15 @@ class _SidebarItem extends StatelessWidget {
   /// disclousure items of a _DisclosureSidebarItem.
   final bool? isLastDisclousureItem;
 
+  @override
+  State<_SidebarItem> createState() => _SidebarItemState();
+}
+
+class _SidebarItemState extends State<_SidebarItem> {
+  bool _isHovered = false;
+
   void _handleActionTap() async {
-    onClick?.call();
+    widget.onClick?.call();
   }
 
   Map<Type, Action<Intent>> get _actionMap => <Type, Action<Intent>>{
@@ -230,12 +237,13 @@ class _SidebarItem extends StatelessWidget {
         ),
       };
 
-  bool get hasLeading => item.leading != null;
-  bool get hasTrailing => item.trailing != null;
+  bool get hasLeading => widget.item.leading != null;
+
+  bool get hasTrailing => widget.item.trailing != null;
 
   bool _onWillAccept(String? identifier) {
-    final accepted = item.onWillAccept?.call(identifier) ?? true;
-    return (identifier != item.identifier && accepted);
+    final accepted = widget.item.onWillAccept?.call(identifier) ?? true;
+    return (identifier != widget.item.identifier && accepted);
   }
 
   @override
@@ -244,12 +252,12 @@ class _SidebarItem extends StatelessWidget {
     final theme = MacosTheme.of(context);
 
     final selectedColor = MacosDynamicColor.resolve(
-      item.selectedColor ??
+      widget.item.selectedColor ??
           _SidebarItemsConfiguration.of(context).selectedColor,
       context,
     );
     final unselectedColor = MacosDynamicColor.resolve(
-      item.unselectedColor ??
+      widget.item.unselectedColor ??
           _SidebarItemsConfiguration.of(context).unselectedColor,
       context,
     );
@@ -270,64 +278,87 @@ class _SidebarItem extends StatelessWidget {
     }
 
     final baseWidget = Semantics(
-      label: item.semanticLabel,
+      label: widget.item.semanticLabel,
       button: true,
       focusable: true,
-      focused: item.focusNode?.hasFocus,
-      enabled: onClick != null,
-      selected: selected,
-      child: GestureDetector(
-        onTap: onClick,
-        child: FocusableActionDetector(
-          focusNode: item.focusNode,
-          descendantsAreFocusable: true,
-          enabled: onClick != null,
-          //mouseCursor: SystemMouseCursors.basic,
-          actions: _actionMap,
-          child: Container(
-            width: 134.0 + theme.visualDensity.horizontal,
-            height: itemSize.height + theme.visualDensity.vertical,
-            decoration: ShapeDecoration(
-              color: selected ? selectedColor : unselectedColor,
-              shape: item.shape ?? _SidebarItemsConfiguration.of(context).shape,
-            ),
-            padding: EdgeInsets.symmetric(
-              vertical: 7 + theme.visualDensity.horizontal,
-              horizontal: spacing,
-            ),
-            child: Row(
-              children: [
-                if (hasLeading)
-                  Padding(
-                    padding: EdgeInsets.only(right: spacing),
-                    child: MacosIconTheme.merge(
-                      data: MacosIconThemeData(
-                        color: selected
-                            ? MacosColors.white
-                            : MacosColors.controlAccentColor,
-                        size: itemSize.iconSize,
+      focused: widget.item.focusNode?.hasFocus,
+      enabled: widget.onClick != null,
+      selected: widget.selected,
+      child: MouseRegion(
+        opaque: false,
+        hitTestBehavior: HitTestBehavior.translucent,
+        onEnter: (_) {
+          setState(() {
+            _isHovered = true;
+          });
+        },
+        onExit: (_) {
+          setState(() {
+            _isHovered = false;
+          });
+        },
+        child: GestureDetector(
+          onTap: widget.onClick,
+          child: FocusableActionDetector(
+            focusNode: widget.item.focusNode,
+            descendantsAreFocusable: true,
+            enabled: widget.onClick != null,
+            //mouseCursor: SystemMouseCursors.basic,
+            actions: _actionMap,
+            child: Container(
+              width: 134.0 + theme.visualDensity.horizontal,
+              height: itemSize.height + theme.visualDensity.vertical,
+              decoration: ShapeDecoration(
+                color: widget.selected ? selectedColor : unselectedColor,
+                shape: widget.item.shape ??
+                    _SidebarItemsConfiguration.of(context).shape,
+              ),
+              padding: EdgeInsets.symmetric(
+                vertical: 7 + theme.visualDensity.horizontal,
+                horizontal: spacing,
+              ),
+              child: Row(
+                children: [
+                  if (hasLeading)
+                    Padding(
+                      padding: EdgeInsets.only(right: spacing),
+                      child: MacosIconTheme.merge(
+                        data: MacosIconThemeData(
+                          color: widget.selected
+                              ? MacosColors.white
+                              : MacosColors.controlAccentColor,
+                          size: itemSize.iconSize,
+                        ),
+                        child: widget.item.leading!,
                       ),
-                      child: item.leading!,
+                    ),
+                  Expanded(
+                    child: DefaultTextStyle(
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: labelStyle.copyWith(
+                        color: widget.selected
+                            ? textLuminance(selectedColor)
+                            : null,
+                      ),
+                      child: widget.item.label,
                     ),
                   ),
-                Expanded(
-                  child: DefaultTextStyle(
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: labelStyle.copyWith(
-                      color: selected ? textLuminance(selectedColor) : null,
+                  if (hasTrailing)
+                    AnimatedOpacity(
+                      opacity: _isHovered ? 1 : 0,
+                      duration: _kExpand,
+                      child: DefaultTextStyle(
+                        style: labelStyle.copyWith(
+                          color: widget.selected
+                              ? textLuminance(selectedColor)
+                              : null,
+                        ),
+                        child: widget.item.trailing!,
+                      ),
                     ),
-                    child: item.label,
-                  ),
-                ),
-                if (hasTrailing)
-                  DefaultTextStyle(
-                    style: labelStyle.copyWith(
-                      color: selected ? textLuminance(selectedColor) : null,
-                    ),
-                    child: item.trailing!,
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -335,13 +366,14 @@ class _SidebarItem extends StatelessWidget {
     );
 
     Widget? draggableWidget() {
-      if (onReordered == null) return null;
+      if (widget.onReordered == null) return null;
 
       final feedback = Container(
         width: 134.0 + theme.visualDensity.horizontal,
         height: itemSize.height + theme.visualDensity.vertical,
         decoration: ShapeDecoration(
-          shape: item.shape ?? _SidebarItemsConfiguration.of(context).shape,
+          shape:
+              widget.item.shape ?? _SidebarItemsConfiguration.of(context).shape,
         ),
         padding: EdgeInsets.symmetric(
           vertical: 7 + theme.visualDensity.horizontal,
@@ -354,12 +386,12 @@ class _SidebarItem extends StatelessWidget {
                 padding: EdgeInsets.only(right: spacing),
                 child: MacosIconTheme.merge(
                   data: MacosIconThemeData(
-                    color: selected
+                    color: widget.selected
                         ? MacosColors.white
                         : MacosColors.controlAccentColor,
                     size: itemSize.iconSize,
                   ),
-                  child: item.leading!,
+                  child: widget.item.leading!,
                 ),
               ),
             Expanded(
@@ -367,9 +399,9 @@ class _SidebarItem extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: labelStyle!.copyWith(
-                  color: selected ? textLuminance(selectedColor) : null,
+                  color: widget.selected ? textLuminance(selectedColor) : null,
                 ),
-                child: item.label,
+                child: widget.item.label,
               ),
             ),
           ],
@@ -390,11 +422,11 @@ class _SidebarItem extends StatelessWidget {
       final renderDragTarget = [
         SidebarItemDragBehavior.dragAndDrop,
         SidebarItemDragBehavior.dropOnly
-      ].contains(item.dragBehavior);
+      ].contains(widget.item.dragBehavior);
       final renderDraggable = [
         SidebarItemDragBehavior.dragAndDrop,
         SidebarItemDragBehavior.dragOnly
-      ].contains(item.dragBehavior);
+      ].contains(widget.item.dragBehavior);
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -402,25 +434,25 @@ class _SidebarItem extends StatelessWidget {
           if (renderDragTarget)
             DragTarget<String>(
               onWillAccept: _onWillAccept,
-              onAccept: (data) =>
-                  onReordered!(data, item.identifier, DropAffinity.above),
+              onAccept: (data) => widget.onReordered!(
+                  data, widget.item.identifier, DropAffinity.above),
               builder: (context, accepted, rejected) =>
                   dropTarget(renderDivider: accepted.isNotEmpty),
             ),
           renderDraggable
               ? Draggable<String>(
-                  data: item.identifier,
+                  data: widget.item.identifier,
                   axis: Axis.vertical,
                   feedback: feedback,
                   childWhenDragging: Opacity(opacity: 0.5, child: baseWidget),
                   child: baseWidget,
                 )
               : baseWidget,
-          if (isLastDisclousureItem == true && renderDragTarget)
+          if (widget.isLastDisclousureItem == true && renderDragTarget)
             DragTarget<String>(
               onWillAccept: _onWillAccept,
-              onAccept: (data) =>
-                  onReordered!(data, item.identifier, DropAffinity.below),
+              onAccept: (data) => widget.onReordered!(
+                  data, widget.item.identifier, DropAffinity.below),
               builder: (context, accepted, rejected) =>
                   dropTarget(renderDivider: accepted.isNotEmpty),
             ),
@@ -428,10 +460,10 @@ class _SidebarItem extends StatelessWidget {
       );
     }
 
-    final widget = draggableWidget() ?? baseWidget;
-    final builder = item.builder;
-    if (builder == null) return widget;
-    return Builder(builder: (context) => builder(context, widget));
+    final child = draggableWidget() ?? baseWidget;
+    final builder = widget.item.builder;
+    if (builder == null) return child;
+    return Builder(builder: (context) => builder(context, child));
   }
 }
 
@@ -480,6 +512,7 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
   late Animation<double> _heightFactor;
 
   bool _isExpanded = true;
+  bool _isHovered = false;
 
   bool get hasLeading => widget.item.leading != null;
 
@@ -535,51 +568,71 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        SizedBox(
-          width: double.infinity,
-          child: _SidebarItem(
-            onReordered: widget.onReordered,
-            item: SidebarItem(
-              identifier: widget.item.identifier,
-              dragBehavior: widget.item.dragBehavior,
-              onWillAccept: widget.item.onWillAccept,
-              label: widget.item.label,
-              leading: Row(
-                children: [
-                  GestureDetector(
-                    onTap: _handleTap,
-                    child: Container(
-                      color: Colors.transparent,
-                      child: RotationTransition(
-                        turns: _iconTurns,
-                        child: Icon(
-                          CupertinoIcons.chevron_right,
-                          size: 12.0,
-                          color: theme.brightness == Brightness.light
-                              ? MacosColors.black
-                              : MacosColors.white,
+        MouseRegion(
+          opaque: false,
+          hitTestBehavior: HitTestBehavior.translucent,
+          onEnter: (_) {
+            setState(() {
+              _isHovered = true;
+            });
+          },
+          onExit: (_) {
+            setState(() {
+              _isHovered = false;
+            });
+          },
+          child: SizedBox(
+            width: double.infinity,
+            child: _SidebarItem(
+              onReordered: widget.onReordered,
+              item: SidebarItem(
+                identifier: widget.item.identifier,
+                dragBehavior: widget.item.dragBehavior,
+                onWillAccept: widget.item.onWillAccept,
+                label: widget.item.label,
+                leading: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: _handleTap,
+                      child: Container(
+                        color: Colors.transparent,
+                        child: RotationTransition(
+                          turns: _iconTurns,
+                          child: Icon(
+                            CupertinoIcons.chevron_right,
+                            size: 12.0,
+                            color: theme.brightness == Brightness.light
+                                ? MacosColors.black
+                                : MacosColors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  if (hasLeading)
-                    Padding(
-                      padding: EdgeInsets.only(left: spacing),
-                      child: MacosIconTheme.merge(
-                        data: MacosIconThemeData(size: itemSize.iconSize),
-                        child: widget.item.leading!,
+                    if (hasLeading)
+                      Padding(
+                        padding: EdgeInsets.only(left: spacing),
+                        child: MacosIconTheme.merge(
+                          data: MacosIconThemeData(size: itemSize.iconSize),
+                          child: widget.item.leading!,
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
+                unselectedColor: MacosColors.transparent,
+                focusNode: widget.item.focusNode,
+                semanticLabel: widget.item.semanticLabel,
+                shape: widget.item.shape,
+                trailing: widget.item.trailing == null
+                    ? null
+                    : AnimatedOpacity(
+                        opacity: _isHovered ? 1 : 0,
+                        duration: _kExpand,
+                        child: widget.item.trailing,
+                      ),
               ),
-              unselectedColor: MacosColors.transparent,
-              focusNode: widget.item.focusNode,
-              semanticLabel: widget.item.semanticLabel,
-              shape: widget.item.shape,
-              trailing: widget.item.trailing,
+              onClick: () => widget.onChanged?.call(widget.item),
+              selected: widget.item.identifier == widget.currentIdentifier,
             ),
-            onClick: () => widget.onChanged?.call(widget.item),
-            selected: widget.item.identifier == widget.currentIdentifier,
           ),
         ),
         ClipRect(
