@@ -184,7 +184,7 @@ class _SidebarItemsConfiguration extends InheritedWidget {
 }
 
 /// A macOS style navigation-list item intended for use in a [Sidebar]
-class _SidebarItem extends StatelessWidget {
+class _SidebarItem extends StatefulWidget {
   /// Builds a [_SidebarItem].
   // ignore: use_super_parameters
   const _SidebarItem({
@@ -217,8 +217,13 @@ class _SidebarItem extends StatelessWidget {
   /// disclousure items of a _DisclosureSidebarItem.
   final bool? isLastDisclousureItem;
 
+  @override
+  State<_SidebarItem> createState() => _SidebarItemState();
+}
+
+class _SidebarItemState extends State<_SidebarItem> {
   void _handleActionTap() async {
-    onClick?.call();
+    widget.onClick?.call();
   }
 
   Map<Type, Action<Intent>> get _actionMap => <Type, Action<Intent>>{
@@ -230,13 +235,16 @@ class _SidebarItem extends StatelessWidget {
         ),
       };
 
-  bool get hasLeading => item.leading != null;
-  bool get hasTrailing => item.trailing != null;
+  bool get hasLeading => widget.item.leading != null;
+
+  bool get hasTrailing => widget.item.trailing != null;
 
   bool _onWillAccept(String? identifier) {
-    final accepted = item.onWillAccept?.call(identifier) ?? true;
-    return (identifier != item.identifier && accepted);
+    final accepted = widget.item.onWillAccept?.call(identifier) ?? true;
+    return (identifier != widget.item.identifier && accepted);
   }
+
+  bool isHovering = false;
 
   @override
   Widget build(BuildContext context) {
@@ -244,12 +252,12 @@ class _SidebarItem extends StatelessWidget {
     final theme = MacosTheme.of(context);
 
     final selectedColor = MacosDynamicColor.resolve(
-      item.selectedColor ??
+      widget.item.selectedColor ??
           _SidebarItemsConfiguration.of(context).selectedColor,
       context,
     );
     final unselectedColor = MacosDynamicColor.resolve(
-      item.unselectedColor ??
+      widget.item.unselectedColor ??
           _SidebarItemsConfiguration.of(context).unselectedColor,
       context,
     );
@@ -270,26 +278,29 @@ class _SidebarItem extends StatelessWidget {
     }
 
     final baseWidget = Semantics(
-      label: item.semanticLabel,
+      label: widget.item.semanticLabel,
       button: true,
       focusable: true,
-      focused: item.focusNode?.hasFocus,
-      enabled: onClick != null,
-      selected: selected,
+      focused: widget.item.focusNode?.hasFocus,
+      enabled: widget.onClick != null,
+      selected: widget.selected,
       child: GestureDetector(
-        onTap: onClick,
+        onTap: widget.onClick,
         child: FocusableActionDetector(
-          focusNode: item.focusNode,
+          focusNode: widget.item.focusNode,
           descendantsAreFocusable: true,
-          enabled: onClick != null,
+          enabled: widget.onClick != null,
           //mouseCursor: SystemMouseCursors.basic,
           actions: _actionMap,
           child: Container(
             width: 134.0 + theme.visualDensity.horizontal,
             height: itemSize.height + theme.visualDensity.vertical,
             decoration: ShapeDecoration(
-              color: selected ? selectedColor : unselectedColor,
-              shape: item.shape ?? _SidebarItemsConfiguration.of(context).shape,
+              color: (widget.selected || isHovering)
+                  ? selectedColor
+                  : unselectedColor,
+              shape: widget.item.shape ??
+                  _SidebarItemsConfiguration.of(context).shape,
             ),
             padding: EdgeInsets.symmetric(
               vertical: 7 + theme.visualDensity.horizontal,
@@ -302,12 +313,12 @@ class _SidebarItem extends StatelessWidget {
                     padding: EdgeInsets.only(right: spacing),
                     child: MacosIconTheme.merge(
                       data: MacosIconThemeData(
-                        color: selected
+                        color: widget.selected
                             ? MacosColors.white
                             : MacosColors.controlAccentColor,
                         size: itemSize.iconSize,
                       ),
-                      child: item.leading!,
+                      child: widget.item.leading!,
                     ),
                   ),
                 Expanded(
@@ -315,17 +326,19 @@ class _SidebarItem extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: labelStyle.copyWith(
-                      color: selected ? textLuminance(selectedColor) : null,
+                      color:
+                          widget.selected ? textLuminance(selectedColor) : null,
                     ),
-                    child: item.label,
+                    child: widget.item.label,
                   ),
                 ),
                 if (hasTrailing)
                   DefaultTextStyle(
                     style: labelStyle.copyWith(
-                      color: selected ? textLuminance(selectedColor) : null,
+                      color:
+                          widget.selected ? textLuminance(selectedColor) : null,
                     ),
-                    child: item.trailing!,
+                    child: widget.item.trailing!,
                   ),
               ],
             ),
@@ -335,13 +348,14 @@ class _SidebarItem extends StatelessWidget {
     );
 
     Widget? draggableWidget() {
-      if (onReordered == null) return null;
+      if (widget.onReordered == null) return null;
 
       final feedback = Container(
         width: 134.0 + theme.visualDensity.horizontal,
         height: itemSize.height + theme.visualDensity.vertical,
         decoration: ShapeDecoration(
-          shape: item.shape ?? _SidebarItemsConfiguration.of(context).shape,
+          shape:
+              widget.item.shape ?? _SidebarItemsConfiguration.of(context).shape,
         ),
         padding: EdgeInsets.symmetric(
           vertical: 7 + theme.visualDensity.horizontal,
@@ -354,12 +368,12 @@ class _SidebarItem extends StatelessWidget {
                 padding: EdgeInsets.only(right: spacing),
                 child: MacosIconTheme.merge(
                   data: MacosIconThemeData(
-                    color: selected
+                    color: widget.selected
                         ? MacosColors.white
                         : MacosColors.controlAccentColor,
                     size: itemSize.iconSize,
                   ),
-                  child: item.leading!,
+                  child: widget.item.leading!,
                 ),
               ),
             Expanded(
@@ -367,9 +381,9 @@ class _SidebarItem extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: labelStyle!.copyWith(
-                  color: selected ? textLuminance(selectedColor) : null,
+                  color: widget.selected ? textLuminance(selectedColor) : null,
                 ),
-                child: item.label,
+                child: widget.item.label,
               ),
             ),
           ],
@@ -390,16 +404,27 @@ class _SidebarItem extends StatelessWidget {
       final renderDragTarget = [
         SidebarItemDragBehavior.dragAndDrop,
         SidebarItemDragBehavior.dropOnly
-      ].contains(item.dragBehavior);
+      ].contains(widget.item.dragBehavior);
       final renderDraggable = [
         SidebarItemDragBehavior.dragAndDrop,
         SidebarItemDragBehavior.dragOnly
-      ].contains(item.dragBehavior);
+      ].contains(widget.item.dragBehavior);
 
       return DragTarget<String>(
           onWillAccept: _onWillAccept,
-          onAccept: (data) =>
-              onReordered!(data, item.identifier, DropAffinity.inside),
+          onMove: (_) {
+            if (isHovering) return;
+            setState(() => isHovering = true);
+          },
+          onLeave: (_) {
+            if (!isHovering) return;
+            setState(() => isHovering = false);
+          },
+          onAccept: (data) {
+            setState(() => isHovering = false);
+            widget.onReordered!(
+                data, widget.item.identifier, DropAffinity.inside);
+          },
           builder: (context, accepted, rejected) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -407,14 +432,14 @@ class _SidebarItem extends StatelessWidget {
                 if (renderDragTarget)
                   DragTarget<String>(
                     onWillAccept: _onWillAccept,
-                    onAccept: (data) =>
-                        onReordered!(data, item.identifier, DropAffinity.above),
+                    onAccept: (data) => widget.onReordered!(
+                        data, widget.item.identifier, DropAffinity.above),
                     builder: (context, accepted, rejected) =>
                         dropTarget(renderDivider: accepted.isNotEmpty),
                   ),
                 renderDraggable
                     ? Draggable<String>(
-                        data: item.identifier,
+                        data: widget.item.identifier,
                         axis: Axis.vertical,
                         feedback: feedback,
                         childWhenDragging:
@@ -422,11 +447,11 @@ class _SidebarItem extends StatelessWidget {
                         child: baseWidget,
                       )
                     : baseWidget,
-                if (isLastDisclousureItem == true && renderDragTarget)
+                if (widget.isLastDisclousureItem == true && renderDragTarget)
                   DragTarget<String>(
                     onWillAccept: _onWillAccept,
-                    onAccept: (data) =>
-                        onReordered!(data, item.identifier, DropAffinity.below),
+                    onAccept: (data) => widget.onReordered!(
+                        data, widget.item.identifier, DropAffinity.below),
                     builder: (context, accepted, rejected) =>
                         dropTarget(renderDivider: accepted.isNotEmpty),
                   ),
@@ -435,10 +460,10 @@ class _SidebarItem extends StatelessWidget {
           });
     }
 
-    final widget = draggableWidget() ?? baseWidget;
-    final builder = item.builder;
-    if (builder == null) return widget;
-    return Builder(builder: (context) => builder(context, widget));
+    final targetWidget = draggableWidget() ?? baseWidget;
+    final builder = widget.item.builder;
+    if (builder == null) return targetWidget;
+    return Builder(builder: (context) => builder(context, targetWidget));
   }
 }
 
