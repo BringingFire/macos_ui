@@ -246,6 +246,19 @@ class _SidebarItemState extends State<_SidebarItem> {
     return (identifier != widget.item.identifier && accepted);
   }
 
+  Widget _dropTarget({required bool renderDivider}) {
+    return Container(
+      height: 8,
+      color: Colors.transparent,
+      child: renderDivider
+          ? Center(
+              child:
+                  Container(height: 2, color: MacosColors.controlAccentColor),
+            )
+          : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     assert(debugCheckHasMacosTheme(context));
@@ -277,97 +290,80 @@ class _SidebarItemState extends State<_SidebarItem> {
         break;
     }
 
-    final baseWidget = Semantics(
+    Widget result = Semantics(
       label: widget.item.semanticLabel,
       button: true,
       focusable: true,
       focused: widget.item.focusNode?.hasFocus,
       enabled: widget.onClick != null,
       selected: widget.selected,
-      child: MouseRegion(
-        opaque: false,
-        hitTestBehavior: HitTestBehavior.translucent,
-        onEnter: (_) {
-          setState(() {
-            _isHovered = true;
-          });
-        },
-        onExit: (_) {
-          setState(() {
-            _isHovered = false;
-          });
-        },
-        child: GestureDetector(
-          onTap: widget.onClick,
-          child: FocusableActionDetector(
-            focusNode: widget.item.focusNode,
-            descendantsAreFocusable: true,
-            enabled: widget.onClick != null,
-            //mouseCursor: SystemMouseCursors.basic,
-            actions: _actionMap,
-            child: Container(
-              width: 134.0 + theme.visualDensity.horizontal,
-              height: itemSize.height + theme.visualDensity.vertical,
-              decoration: ShapeDecoration(
-                color: widget.selected ? selectedColor : unselectedColor,
-                shape: widget.item.shape ??
-                    _SidebarItemsConfiguration.of(context).shape,
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: 7 + theme.visualDensity.horizontal,
-                horizontal: spacing,
-              ),
-              child: Row(
-                children: [
-                  if (hasLeading)
-                    Padding(
-                      padding: EdgeInsets.only(right: spacing),
-                      child: MacosIconTheme.merge(
-                        data: MacosIconThemeData(
-                          color: widget.selected
-                              ? MacosColors.white
-                              : MacosColors.controlAccentColor,
-                          size: itemSize.iconSize,
-                        ),
-                        child: widget.item.leading!,
+      child: GestureDetector(
+        onTap: widget.onClick,
+        child: FocusableActionDetector(
+          focusNode: widget.item.focusNode,
+          descendantsAreFocusable: true,
+          enabled: widget.onClick != null,
+          //mouseCursor: SystemMouseCursors.basic,
+          actions: _actionMap,
+          child: Container(
+            width: 134.0 + theme.visualDensity.horizontal,
+            height: itemSize.height + theme.visualDensity.vertical,
+            decoration: ShapeDecoration(
+              color: widget.selected ? selectedColor : unselectedColor,
+              shape: widget.item.shape ??
+                  _SidebarItemsConfiguration.of(context).shape,
+            ),
+            padding: EdgeInsets.symmetric(
+              vertical: 7 + theme.visualDensity.horizontal,
+              horizontal: spacing,
+            ),
+            child: Row(
+              children: [
+                if (hasLeading)
+                  Padding(
+                    padding: EdgeInsets.only(right: spacing),
+                    child: MacosIconTheme.merge(
+                      data: MacosIconThemeData(
+                        color: widget.selected
+                            ? MacosColors.white
+                            : MacosColors.controlAccentColor,
+                        size: itemSize.iconSize,
                       ),
+                      child: widget.item.leading!,
                     ),
-                  Expanded(
+                  ),
+                Expanded(
+                  child: DefaultTextStyle(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: labelStyle.copyWith(
+                      color:
+                          widget.selected ? textLuminance(selectedColor) : null,
+                    ),
+                    child: widget.item.label,
+                  ),
+                ),
+                if (hasTrailing)
+                  AnimatedOpacity(
+                    opacity: _isHovered ? 1 : 0,
+                    duration: _kExpand,
                     child: DefaultTextStyle(
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: labelStyle.copyWith(
                         color: widget.selected
                             ? textLuminance(selectedColor)
                             : null,
                       ),
-                      child: widget.item.label,
+                      child: widget.item.trailing!,
                     ),
                   ),
-                  if (hasTrailing)
-                    AnimatedOpacity(
-                      opacity: _isHovered ? 1 : 0,
-                      duration: _kExpand,
-                      child: DefaultTextStyle(
-                        style: labelStyle.copyWith(
-                          color: widget.selected
-                              ? textLuminance(selectedColor)
-                              : null,
-                        ),
-                        child: widget.item.trailing!,
-                      ),
-                    ),
-                ],
-              ),
+              ],
             ),
           ),
         ),
       ),
     );
 
-    Widget? draggableWidget() {
-      if (widget.onReordered == null) return null;
-
+    if (widget.onReordered != null) {
       final feedback = Container(
         width: 134.0 + theme.visualDensity.horizontal,
         height: itemSize.height + theme.visualDensity.vertical,
@@ -407,63 +403,73 @@ class _SidebarItemState extends State<_SidebarItem> {
           ],
         ),
       );
-      Widget dropTarget({required bool renderDivider}) {
-        return Container(
-            height: 8,
-            color: Colors.transparent,
-            child: renderDivider
-                ? Center(
-                    child: Container(
-                        height: 2, color: MacosColors.controlAccentColor),
-                  )
-                : null);
-      }
 
       final renderDragTarget = [
         SidebarItemDragBehavior.dragAndDrop,
-        SidebarItemDragBehavior.dropOnly
+        SidebarItemDragBehavior.dropOnly,
       ].contains(widget.item.dragBehavior);
       final renderDraggable = [
         SidebarItemDragBehavior.dragAndDrop,
-        SidebarItemDragBehavior.dragOnly
+        SidebarItemDragBehavior.dragOnly,
       ].contains(widget.item.dragBehavior);
 
-      return Column(
+      result = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (renderDragTarget)
             DragTarget<String>(
               onWillAccept: _onWillAccept,
               onAccept: (data) => widget.onReordered!(
-                  data, widget.item.identifier, DropAffinity.above),
+                data,
+                widget.item.identifier,
+                DropAffinity.above,
+              ),
               builder: (context, accepted, rejected) =>
-                  dropTarget(renderDivider: accepted.isNotEmpty),
+                  _dropTarget(renderDivider: accepted.isNotEmpty),
             ),
           renderDraggable
               ? Draggable<String>(
                   data: widget.item.identifier,
                   axis: Axis.vertical,
                   feedback: feedback,
-                  childWhenDragging: Opacity(opacity: 0.5, child: baseWidget),
-                  child: baseWidget,
+                  childWhenDragging: Opacity(opacity: 0.5, child: result),
+                  child: result,
                 )
-              : baseWidget,
+              : result,
           if (widget.isLastDisclousureItem == true && renderDragTarget)
             DragTarget<String>(
               onWillAccept: _onWillAccept,
               onAccept: (data) => widget.onReordered!(
-                  data, widget.item.identifier, DropAffinity.below),
+                data,
+                widget.item.identifier,
+                DropAffinity.below,
+              ),
               builder: (context, accepted, rejected) =>
-                  dropTarget(renderDivider: accepted.isNotEmpty),
+                  _dropTarget(renderDivider: accepted.isNotEmpty),
             ),
         ],
       );
     }
 
-    final child = draggableWidget() ?? baseWidget;
+    result = MouseRegion(
+      hitTestBehavior: HitTestBehavior.translucent,
+      opaque: false,
+      onEnter: (_) {
+        setState(() {
+          _isHovered = true;
+        });
+      },
+      onExit: (_) {
+        setState(() {
+          _isHovered = false;
+        });
+      },
+      child: result,
+    );
+
     final builder = widget.item.builder;
-    if (builder == null) return child;
-    return Builder(builder: (context) => builder(context, child));
+    if (builder == null) return result;
+    return Builder(builder: (context) => builder(context, result));
   }
 }
 
