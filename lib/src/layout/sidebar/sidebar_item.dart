@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:macos_ui/macos_ui.dart';
 import 'package:macos_ui/src/library.dart';
 
 /// A macOS style navigation-list item intended for use in a [Sidebar]
@@ -80,7 +81,7 @@ class SidebarItem with Diagnosticable {
   final SidebarItemDragBehavior dragBehavior;
 
   /// Callback to accept reorder change.
-  final bool Function(String? identifier)? onWillAccept;
+  final bool Function(String? identifier, DropAffinity dropAffinity)? onWillAccept;
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
@@ -95,8 +96,7 @@ class SidebarItem with Diagnosticable {
       disclosureItems,
     ));
     properties.add(DiagnosticsProperty<Widget?>('trailing', trailing));
-    properties.add(DiagnosticsProperty<SidebarItemDragBehavior>(
-        'dragBehavior', dragBehavior));
+    properties.add(DiagnosticsProperty<SidebarItemDragBehavior>('dragBehavior', dragBehavior));
   }
 }
 

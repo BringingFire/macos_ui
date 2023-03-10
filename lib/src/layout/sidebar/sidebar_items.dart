@@ -223,6 +223,7 @@ class _SidebarItem extends StatefulWidget {
 
 class _SidebarItemState extends State<_SidebarItem> {
   bool _isHovered = false;
+  bool _isDraggingInside = false;
 
   void _handleActionTap() async {
     widget.onClick?.call();
@@ -241,8 +242,9 @@ class _SidebarItemState extends State<_SidebarItem> {
 
   bool get hasTrailing => widget.item.trailing != null;
 
-  bool _onWillAccept(String? identifier) {
-    final accepted = widget.item.onWillAccept?.call(identifier) ?? true;
+  bool _onWillAccept(String? identifier, DropAffinity dropAffinity) {
+    final accepted =
+        widget.item.onWillAccept?.call(identifier, dropAffinity) ?? true;
     return (identifier != widget.item.identifier && accepted);
   }
 
@@ -290,7 +292,7 @@ class _SidebarItemState extends State<_SidebarItem> {
         break;
     }
 
-    Widget result = Semantics(
+    Widget baseSbItemWidget = Semantics(
       label: widget.item.semanticLabel,
       button: true,
       focusable: true,
@@ -309,7 +311,9 @@ class _SidebarItemState extends State<_SidebarItem> {
             width: 134.0 + theme.visualDensity.horizontal,
             height: itemSize.height + theme.visualDensity.vertical,
             decoration: ShapeDecoration(
-              color: widget.selected ? selectedColor : unselectedColor,
+              color: (widget.selected || _isDraggingInside)
+                  ? selectedColor
+                  : unselectedColor,
               shape: widget.item.shape ??
                   _SidebarItemsConfiguration.of(context).shape,
             ),
@@ -363,7 +367,8 @@ class _SidebarItemState extends State<_SidebarItem> {
       ),
     );
 
-    if (widget.onReordered != null) {
+    Widget? draggableSbItemWidget() {
+      if (widget.onReordered == null) return null;
       final feedback = Container(
         width: 134.0 + theme.visualDensity.horizontal,
         height: itemSize.height + theme.visualDensity.vertical,
@@ -413,45 +418,71 @@ class _SidebarItemState extends State<_SidebarItem> {
         SidebarItemDragBehavior.dragOnly,
       ].contains(widget.item.dragBehavior);
 
-      result = Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (renderDragTarget)
-            DragTarget<String>(
-              onWillAccept: _onWillAccept,
-              onAccept: (data) => widget.onReordered!(
+      return DragTarget<String>(
+          onWillAccept: (data) => _onWillAccept(data, DropAffinity.inside),
+          onMove: (details) {
+            final shouldUpdate =
+                _onWillAccept(details.data, DropAffinity.inside);
+            if (!shouldUpdate || _isDraggingInside) return;
+            setState(() {
+              _isDraggingInside = true;
+            });
+          },
+          onLeave: (details) {
+            if (!_isDraggingInside) return;
+            setState(() {
+              _isDraggingInside = false;
+            });
+          },
+          onAccept: (data) => widget.onReordered!(
                 data,
                 widget.item.identifier,
-                DropAffinity.above,
+                DropAffinity.inside,
               ),
-              builder: (context, accepted, rejected) =>
-                  _dropTarget(renderDivider: accepted.isNotEmpty),
-            ),
-          renderDraggable
-              ? Draggable<String>(
-                  data: widget.item.identifier,
-                  axis: Axis.vertical,
-                  feedback: feedback,
-                  childWhenDragging: Opacity(opacity: 0.5, child: result),
-                  child: result,
-                )
-              : result,
-          if (widget.isLastDisclousureItem == true && renderDragTarget)
-            DragTarget<String>(
-              onWillAccept: _onWillAccept,
-              onAccept: (data) => widget.onReordered!(
-                data,
-                widget.item.identifier,
-                DropAffinity.below,
-              ),
-              builder: (context, accepted, rejected) =>
-                  _dropTarget(renderDivider: accepted.isNotEmpty),
-            ),
-        ],
-      );
+          builder: (context, accepted, rejected) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (renderDragTarget)
+                  DragTarget<String>(
+                    onWillAccept: (data) =>
+                        _onWillAccept(data, DropAffinity.above),
+                    onAccept: (data) => widget.onReordered!(
+                      data,
+                      widget.item.identifier,
+                      DropAffinity.above,
+                    ),
+                    builder: (context, accepted, rejected) =>
+                        _dropTarget(renderDivider: accepted.isNotEmpty),
+                  ),
+                renderDraggable
+                    ? Draggable<String>(
+                        data: widget.item.identifier,
+                        axis: Axis.vertical,
+                        feedback: feedback,
+                        childWhenDragging:
+                            Opacity(opacity: 0.5, child: baseSbItemWidget),
+                        child: baseSbItemWidget,
+                      )
+                    : baseSbItemWidget,
+                if (widget.isLastDisclousureItem == true && renderDragTarget)
+                  DragTarget<String>(
+                    onWillAccept: (data) =>
+                        _onWillAccept(data, DropAffinity.below),
+                    onAccept: (data) => widget.onReordered!(
+                      data,
+                      widget.item.identifier,
+                      DropAffinity.below,
+                    ),
+                    builder: (context, accepted, rejected) =>
+                        _dropTarget(renderDivider: accepted.isNotEmpty),
+                  ),
+              ],
+            );
+          });
     }
 
-    result = MouseRegion(
+    final sbItemWidget = MouseRegion(
       hitTestBehavior: HitTestBehavior.translucent,
       opaque: false,
       onEnter: (_) {
@@ -464,12 +495,12 @@ class _SidebarItemState extends State<_SidebarItem> {
           _isHovered = false;
         });
       },
-      child: result,
+      child: draggableSbItemWidget() ?? baseSbItemWidget,
     );
 
     final builder = widget.item.builder;
-    if (builder == null) return result;
-    return Builder(builder: (context) => builder(context, result));
+    if (builder == null) return sbItemWidget;
+    return Builder(builder: (context) => builder(context, sbItemWidget));
   }
 }
 
@@ -723,4 +754,4 @@ bool debugCheckSidebarIdsUnique(List<SidebarItem> items) {
   return itemIds.length == Set.of(itemIds).length;
 }
 
-enum DropAffinity { above, below }
+enum DropAffinity { above, below, inside }
