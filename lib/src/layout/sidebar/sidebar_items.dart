@@ -434,11 +434,16 @@ class _SidebarItemState extends State<_SidebarItem> {
               _isDraggingInside = false;
             });
           },
-          onAccept: (data) => widget.onReordered!(
-                data,
-                widget.item.identifier,
-                DropAffinity.inside,
-              ),
+          onAccept: (data) {
+            widget.onReordered!(
+              data,
+              widget.item.identifier,
+              DropAffinity.inside,
+            );
+            setState(() {
+              _isDraggingInside = false;
+            });
+          },
           builder: (context, accepted, rejected) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
