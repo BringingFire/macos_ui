@@ -173,7 +173,7 @@ class _WidgetGalleryState extends State<WidgetGallery> {
           ),
           minWidth: 200,
           builder: (context, scrollController) {
-            return SidebarItems(
+            return SidebarItems<String>(
               currentIdentifier: currentIdentifier,
               onChanged: (i) => setState(() => currentIdentifier = i),
               scrollController: scrollController,

@@ -8,7 +8,7 @@ import 'package:macos_ui/src/library.dart';
 ///
 ///  * [Sidebar], a side bar used alongside [MacosScaffold]
 ///  * [SidebarItems], the widget that displays [SidebarItem]s vertically
-class SidebarItem with Diagnosticable {
+class SidebarItem<T extends Object> with Diagnosticable {
   /// Creates a sidebar item.
   const SidebarItem({
     this.leading,
@@ -31,7 +31,7 @@ class SidebarItem with Diagnosticable {
 
   /// Arbitrary identifier for this sidebar item. Must be unique among all
   /// sidebar items, including nested disclosure items.
-  final String identifier;
+  final T identifier;
 
   /// The widget before [label].
   ///
@@ -67,7 +67,7 @@ class SidebarItem with Diagnosticable {
   /// The disclosure items. If null, there will be no disclosure items.
   ///
   /// If non-null and [leading] is null, a local animated icon is created
-  final List<SidebarItem>? disclosureItems;
+  final List<SidebarItem<T>>? disclosureItems;
 
   /// An optional trailing widget.
   ///
@@ -81,7 +81,7 @@ class SidebarItem with Diagnosticable {
   final SidebarItemDragBehavior dragBehavior;
 
   /// Callback to accept reorder change.
-  final bool Function(String? identifier, DropAffinity dropAffinity)? onWillAccept;
+  final bool Function(T? identifier, DropAffinity dropAffinity)? onWillAccept;
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
@@ -96,7 +96,8 @@ class SidebarItem with Diagnosticable {
       disclosureItems,
     ));
     properties.add(DiagnosticsProperty<Widget?>('trailing', trailing));
-    properties.add(DiagnosticsProperty<SidebarItemDragBehavior>('dragBehavior', dragBehavior));
+    properties.add(DiagnosticsProperty<SidebarItemDragBehavior>(
+        'dragBehavior', dragBehavior));
   }
 }
 
