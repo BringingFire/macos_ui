@@ -23,6 +23,8 @@ class SidebarItem<T extends Object> with Diagnosticable {
     this.trailing,
     this.builder,
     this.onWillAccept,
+    required this.isExpanded,
+    required this.onExpanded,
     this.dragBehavior = SidebarItemDragBehavior.dragAndDrop,
   });
 
@@ -82,6 +84,12 @@ class SidebarItem<T extends Object> with Diagnosticable {
 
   /// Callback to accept reorder change.
   final bool Function(T? identifier, DropAffinity dropAffinity)? onWillAccept;
+
+  /// Sidebar item expanded state.
+  final bool isExpanded;
+
+  /// Callback that runs on change expanded state.
+  final void Function(bool isExpanded) onExpanded;
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {

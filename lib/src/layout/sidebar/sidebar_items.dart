@@ -555,7 +555,6 @@ class __DisclosureSidebarItemState<T extends Object>
   late Animation<double> _iconTurns;
   late Animation<double> _heightFactor;
 
-  bool _isExpanded = true;
   bool _isHovered = false;
 
   bool get hasLeading => widget.item.leading != null;
@@ -564,7 +563,7 @@ class __DisclosureSidebarItemState<T extends Object>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      value: 1,
+      value: widget.item.isExpanded ? 1 : 0,
       duration: _kExpand,
       vsync: this,
     );
@@ -572,23 +571,20 @@ class __DisclosureSidebarItemState<T extends Object>
     _iconTurns = _controller.drive(_halfTween.chain(_easeInTween));
   }
 
-  void _handleTap() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-      if (_isExpanded) {
-        _controller.forward();
-      } else {
-        _controller.reverse().then<void>((void value) {
-          if (!mounted) return;
-          setState(() {
-            // Rebuild without widget.children.
-          });
+  @override
+  void didUpdateWidget(covariant _DisclosureSidebarItem<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!mounted || oldWidget.item.isExpanded == widget.item.isExpanded) return;
+    if (widget.item.isExpanded) {
+      _controller.forward();
+    } else {
+      _controller.reverse().then<void>((void value) {
+        if (!mounted) return;
+        setState(() {
+          // Rebuild without widget.children.
         });
-      }
-
-      PageStorage.of(context).writeState(context, _isExpanded);
-    });
-    // widget.onExpansionChanged?.call(_isExpanded);
+      });
+    }
   }
 
   Widget _buildChildren(BuildContext context, Widget? child) {
@@ -634,10 +630,13 @@ class __DisclosureSidebarItemState<T extends Object>
                 dragBehavior: widget.item.dragBehavior,
                 onWillAccept: widget.item.onWillAccept,
                 label: widget.item.label,
+                isExpanded: widget.item.isExpanded,
+                onExpanded: widget.item.onExpanded,
                 leading: Row(
                   children: [
                     GestureDetector(
-                      onTap: _handleTap,
+                      onTap: () =>
+                          widget.item.onExpanded(!widget.item.isExpanded),
                       child: Container(
                         color: Colors.transparent,
                         child: RotationTransition(
@@ -704,7 +703,7 @@ class __DisclosureSidebarItemState<T extends Object>
     assert(debugCheckHasMacosTheme(context));
     final theme = MacosTheme.of(context);
 
-    final bool closed = !_isExpanded && _controller.isDismissed;
+    final bool closed = !widget.item.isExpanded && _controller.isDismissed;
 
     final Widget result = Offstage(
       offstage: closed,
