@@ -63,7 +63,7 @@ class SidebarItems<T extends Object> extends StatelessWidget {
   final List<SidebarItem<T>> items;
 
   /// The id of the currently selected item. There must be a [SidebarItem] with a matching id in [items].
-  final String currentIdentifier;
+  final T currentIdentifier;
 
   /// Called when the current selected identifier should be changed.
   final ValueChanged<T> onChanged;
@@ -523,7 +523,7 @@ class _DisclosureSidebarItem<T extends Object> extends StatefulWidget {
 
   final SidebarItem<T> item;
 
-  final String? currentIdentifier;
+  final T? currentIdentifier;
 
   /// A function to perform when the widget is clicked or tapped.
   ///
