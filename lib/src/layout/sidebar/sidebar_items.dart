@@ -292,6 +292,12 @@ class _SidebarItemState<T extends Object> extends State<_SidebarItem<T>> {
         break;
     }
 
+    Color backgroundColor() {
+      if (_isDraggingInside) return MacosColors.controlAccentColor;
+      if (widget.selected) return selectedColor;
+      return unselectedColor;
+    }
+
     Widget baseSbItemWidget = Semantics(
       label: widget.item.semanticLabel,
       button: true,
@@ -311,9 +317,7 @@ class _SidebarItemState<T extends Object> extends State<_SidebarItem<T>> {
             width: 134.0 + theme.visualDensity.horizontal,
             height: itemSize.height + theme.visualDensity.vertical,
             decoration: ShapeDecoration(
-              color: (widget.selected || _isDraggingInside)
-                  ? selectedColor
-                  : unselectedColor,
+              color: backgroundColor(),
               shape: widget.item.shape ??
                   _SidebarItemsConfiguration.of(context).shape,
             ),
@@ -341,8 +345,9 @@ class _SidebarItemState<T extends Object> extends State<_SidebarItem<T>> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: labelStyle.copyWith(
-                      color:
-                          widget.selected ? textLuminance(selectedColor) : null,
+                      color: widget.selected || _isDraggingInside
+                          ? textLuminance(selectedColor)
+                          : null,
                     ),
                     child: widget.item.label,
                   ),
