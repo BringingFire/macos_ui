@@ -73,6 +73,12 @@ class _WidgetGalleryState extends State<WidgetGallery> {
     'tabview': const TabViewPage(),
   };
 
+  final Map<String, bool> expandedState = {};
+
+  bool isExpanded(String id) => expandedState[id] ?? true;
+  void updateExpandedState(String id, bool isExpanded) =>
+      expandedState[id] = isExpanded;
+
   @override
   Widget build(BuildContext context) {
     return PlatformMenuBar(
@@ -173,42 +179,54 @@ class _WidgetGalleryState extends State<WidgetGallery> {
           ),
           minWidth: 200,
           builder: (context, scrollController) {
-            return SidebarItems(
+            return SidebarItems<String>(
               currentIdentifier: currentIdentifier,
               onChanged: (i) => setState(() => currentIdentifier = i),
               scrollController: scrollController,
               itemSize: SidebarItemSize.large,
               items: [
-                const SidebarItem(
+                SidebarItem(
                   identifier: 'buttons',
+                  isExpanded: isExpanded('buttons'),
+                  onExpanded: (expanded) =>
+                      setState(() => updateExpandedState('buttons', expanded)),
                   // leading: MacosIcon(CupertinoIcons.square_on_circle),
-                  leading: MacosImageIcon(
+                  leading: const MacosImageIcon(
                     AssetImage(
                       'assets/sf_symbols/button_programmable_2x.png',
                     ),
                   ),
-                  label: Text('Buttons'),
+                  label: const Text('Buttons'),
                 ),
-                const SidebarItem(
+                SidebarItem(
                   identifier: 'indicators',
-                  leading: MacosImageIcon(
+                  isExpanded: isExpanded('indicators'),
+                  onExpanded: (expanded) => setState(
+                      () => updateExpandedState('indicators', expanded)),
+                  leading: const MacosImageIcon(
                     AssetImage(
                       'assets/sf_symbols/lines_measurement_horizontal_2x.png',
                     ),
                   ),
-                  label: Text('Indicators'),
+                  label: const Text('Indicators'),
                 ),
-                const SidebarItem(
+                SidebarItem(
                   identifier: 'fields',
-                  leading: MacosImageIcon(
+                  isExpanded: isExpanded('fields'),
+                  onExpanded: (expanded) =>
+                      setState(() => updateExpandedState('fields', expanded)),
+                  leading: const MacosImageIcon(
                     AssetImage(
                       'assets/sf_symbols/character_cursor_ibeam_2x.png',
                     ),
                   ),
-                  label: Text('Fields'),
+                  label: const Text('Fields'),
                 ),
                 SidebarItem(
                   identifier: 'disclosure',
+                  isExpanded: isExpanded('disclosure'),
+                  onExpanded: (expanded) => setState(
+                      () => updateExpandedState('disclosure', expanded)),
                   leading: const MacosIcon(CupertinoIcons.folder),
                   label: const Text('Disclosure'),
                   trailing: Text(
@@ -220,45 +238,63 @@ class _WidgetGalleryState extends State<WidgetGallery> {
                     ),
                   ),
                   disclosureItems: [
-                    const SidebarItem(
+                    SidebarItem(
                       identifier: 'colors',
-                      leading: MacosImageIcon(
+                      isExpanded: isExpanded('colors'),
+                      onExpanded: (expanded) => setState(
+                          () => updateExpandedState('colors', expanded)),
+                      leading: const MacosImageIcon(
                         AssetImage(
                           'assets/sf_symbols/rectangle_3_group_2x.png',
                         ),
                       ),
-                      label: Text('Colors'),
+                      label: const Text('Colors'),
                     ),
-                    const SidebarItem(
+                    SidebarItem(
                       identifier: 'add',
-                      leading: MacosIcon(CupertinoIcons.infinite),
-                      label: Text('Item 3'),
+                      isExpanded: isExpanded('add'),
+                      onExpanded: (expanded) =>
+                          setState(() => updateExpandedState('add', expanded)),
+                      leading: const MacosIcon(CupertinoIcons.infinite),
+                      label: const Text('Item 3'),
                     ),
                   ],
                 ),
-                const SidebarItem(
+                SidebarItem(
                   identifier: 'dialogs',
-                  leading: MacosIcon(CupertinoIcons.square_on_square),
-                  label: Text('Dialogs & Sheets'),
+                  isExpanded: isExpanded('dialogs'),
+                  onExpanded: (expanded) =>
+                      setState(() => updateExpandedState('dialogs', expanded)),
+                  leading: const MacosIcon(CupertinoIcons.square_on_square),
+                  label: const Text('Dialogs & Sheets'),
                 ),
-                const SidebarItem(
+                SidebarItem(
                   identifier: 'toolbar',
-                  leading: MacosIcon(CupertinoIcons.macwindow),
-                  label: Text('Toolbar'),
+                  isExpanded: isExpanded('toolbar'),
+                  onExpanded: (expanded) =>
+                      setState(() => updateExpandedState('toolbar', expanded)),
+                  leading: const MacosIcon(CupertinoIcons.macwindow),
+                  label: const Text('Toolbar'),
                 ),
-                const SidebarItem(
+                SidebarItem(
                   identifier: 'selectors',
-                  leading: MacosImageIcon(
+                  isExpanded: isExpanded('selectors'),
+                  onExpanded: (expanded) => setState(
+                      () => updateExpandedState('selectors', expanded)),
+                  leading: const MacosImageIcon(
                     AssetImage(
                       'assets/sf_symbols/filemenu_and_selection_2x.png',
                     ),
                   ),
-                  label: Text('Selectors'),
+                  label: const Text('Selectors'),
                 ),
-                const SidebarItem(
+                SidebarItem(
                   identifier: 'tabview',
-                  leading: MacosIcon(CupertinoIcons.uiwindow_split_2x1),
-                  label: Text('TabView'),
+                  isExpanded: isExpanded('tabview'),
+                  onExpanded: (expanded) =>
+                      setState(() => updateExpandedState('tabview', expanded)),
+                  leading: const MacosIcon(CupertinoIcons.uiwindow_split_2x1),
+                  label: const Text('TabView'),
                 ),
               ],
             );

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:macos_ui/macos_ui.dart';
 import 'package:macos_ui/src/library.dart';
 
 /// A macOS style navigation-list item intended for use in a [Sidebar]
@@ -7,7 +8,7 @@ import 'package:macos_ui/src/library.dart';
 ///
 ///  * [Sidebar], a side bar used alongside [MacosScaffold]
 ///  * [SidebarItems], the widget that displays [SidebarItem]s vertically
-class SidebarItem with Diagnosticable {
+class SidebarItem<T extends Object> with Diagnosticable {
   /// Creates a sidebar item.
   const SidebarItem({
     this.leading,
@@ -22,6 +23,8 @@ class SidebarItem with Diagnosticable {
     this.trailing,
     this.builder,
     this.onWillAccept,
+    required this.isExpanded,
+    required this.onExpanded,
     this.dragBehavior = SidebarItemDragBehavior.dragAndDrop,
   });
 
@@ -30,7 +33,7 @@ class SidebarItem with Diagnosticable {
 
   /// Arbitrary identifier for this sidebar item. Must be unique among all
   /// sidebar items, including nested disclosure items.
-  final String identifier;
+  final T identifier;
 
   /// The widget before [label].
   ///
@@ -66,7 +69,7 @@ class SidebarItem with Diagnosticable {
   /// The disclosure items. If null, there will be no disclosure items.
   ///
   /// If non-null and [leading] is null, a local animated icon is created
-  final List<SidebarItem>? disclosureItems;
+  final List<SidebarItem<T>>? disclosureItems;
 
   /// An optional trailing widget.
   ///
@@ -80,7 +83,13 @@ class SidebarItem with Diagnosticable {
   final SidebarItemDragBehavior dragBehavior;
 
   /// Callback to accept reorder change.
-  final bool Function(String? identifier)? onWillAccept;
+  final bool Function(T? identifier, DropAffinity dropAffinity)? onWillAccept;
+
+  /// Sidebar item expanded state.
+  final bool isExpanded;
+
+  /// Callback that runs on change expanded state.
+  final void Function(bool isExpanded) onExpanded;
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {

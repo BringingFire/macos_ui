@@ -42,7 +42,7 @@ enum SidebarItemSize {
 ///
 ///  * [SidebarItem], the items used by this sidebar
 ///  * [Sidebar], a side bar used alongside [MacosScaffold]
-class SidebarItems extends StatelessWidget {
+class SidebarItems<T extends Object> extends StatelessWidget {
   /// Creates a scrollable widget that renders [SidebarItem]s.
   const SidebarItems({
     super.key,
@@ -60,13 +60,13 @@ class SidebarItems extends StatelessWidget {
 
   /// The [SidebarItem]s used by the sidebar. If no items are provided,
   /// the sidebar is not rendered.
-  final List<SidebarItem> items;
+  final List<SidebarItem<T>> items;
 
   /// The id of the currently selected item. There must be a [SidebarItem] with a matching id in [items].
-  final String currentIdentifier;
+  final T currentIdentifier;
 
   /// Called when the current selected identifier should be changed.
-  final ValueChanged<String> onChanged;
+  final ValueChanged<T> onChanged;
 
   /// The size specifications for all [items].
   ///
@@ -98,8 +98,8 @@ class SidebarItems extends StatelessWidget {
   final MouseCursor? cursor;
 
   /// Callback that runs when a sidebar item is dragged to a new position.
-  final void Function(
-      String reorderedId, String droppedAt, DropAffinity affinity)? onReordered;
+  final void Function(T reorderedId, T droppedAt, DropAffinity affinity)?
+      onReordered;
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +124,7 @@ class SidebarItems extends StatelessWidget {
             if (item.disclosureItems != null) {
               return MouseRegion(
                 cursor: cursor!,
-                child: _DisclosureSidebarItem(
+                child: _DisclosureSidebarItem<T>(
                   key: ValueKey(item.identifier),
                   item: item,
                   onReordered: onReordered,
@@ -137,7 +137,7 @@ class SidebarItems extends StatelessWidget {
             }
             return MouseRegion(
               cursor: cursor!,
-              child: _SidebarItem(
+              child: _SidebarItem<T>(
                 key: ValueKey(item.identifier),
                 item: item,
                 onReordered: onReordered,
@@ -184,7 +184,7 @@ class _SidebarItemsConfiguration extends InheritedWidget {
 }
 
 /// A macOS style navigation-list item intended for use in a [Sidebar]
-class _SidebarItem extends StatefulWidget {
+class _SidebarItem<T extends Object> extends StatefulWidget {
   /// Builds a [_SidebarItem].
   // ignore: use_super_parameters
   const _SidebarItem({
@@ -199,7 +199,7 @@ class _SidebarItem extends StatefulWidget {
   /// The widget to lay out first.
   ///
   /// Typically an [Icon]
-  final SidebarItem item;
+  final SidebarItem<T> item;
 
   /// Whether the item is selected or not
   final bool selected;
@@ -210,19 +210,20 @@ class _SidebarItem extends StatefulWidget {
   final VoidCallback? onClick;
 
   /// Callback that runs when a sidebar item is dragged to a new position.
-  final void Function(
-      String reorderedId, String droppedAt, DropAffinity affinity)? onReordered;
+  final void Function(T reorderedId, T droppedAt, DropAffinity affinity)?
+      onReordered;
 
   /// Use to render a DropTarget below the item if it is the last on the list of
   /// disclousure items of a _DisclosureSidebarItem.
   final bool? isLastDisclousureItem;
 
   @override
-  State<_SidebarItem> createState() => _SidebarItemState();
+  State<_SidebarItem<T>> createState() => _SidebarItemState<T>();
 }
 
-class _SidebarItemState extends State<_SidebarItem> {
+class _SidebarItemState<T extends Object> extends State<_SidebarItem<T>> {
   bool _isHovered = false;
+  bool _isDraggingInside = false;
 
   void _handleActionTap() async {
     widget.onClick?.call();
@@ -241,8 +242,9 @@ class _SidebarItemState extends State<_SidebarItem> {
 
   bool get hasTrailing => widget.item.trailing != null;
 
-  bool _onWillAccept(String? identifier) {
-    final accepted = widget.item.onWillAccept?.call(identifier) ?? true;
+  bool _onWillAccept(T? identifier, DropAffinity dropAffinity) {
+    final accepted =
+        widget.item.onWillAccept?.call(identifier, dropAffinity) ?? true;
     return (identifier != widget.item.identifier && accepted);
   }
 
@@ -252,8 +254,8 @@ class _SidebarItemState extends State<_SidebarItem> {
       color: Colors.transparent,
       child: renderDivider
           ? Center(
-              child:
-                  Container(height: 2, color: MacosColors.controlAccentColor),
+              child: Container(
+                  height: 2, color: MacosTheme.of(context).primaryColor),
             )
           : null,
     );
@@ -290,7 +292,13 @@ class _SidebarItemState extends State<_SidebarItem> {
         break;
     }
 
-    Widget result = Semantics(
+    Color backgroundColor() {
+      if (_isDraggingInside) return MacosTheme.of(context).primaryColor;
+      if (widget.selected) return selectedColor;
+      return unselectedColor;
+    }
+
+    Widget baseSbItemWidget = Semantics(
       label: widget.item.semanticLabel,
       button: true,
       focusable: true,
@@ -309,7 +317,7 @@ class _SidebarItemState extends State<_SidebarItem> {
             width: 134.0 + theme.visualDensity.horizontal,
             height: itemSize.height + theme.visualDensity.vertical,
             decoration: ShapeDecoration(
-              color: widget.selected ? selectedColor : unselectedColor,
+              color: backgroundColor(),
               shape: widget.item.shape ??
                   _SidebarItemsConfiguration.of(context).shape,
             ),
@@ -326,7 +334,7 @@ class _SidebarItemState extends State<_SidebarItem> {
                       data: MacosIconThemeData(
                         color: widget.selected
                             ? MacosColors.white
-                            : MacosColors.controlAccentColor,
+                            : MacosTheme.of(context).primaryColor,
                         size: itemSize.iconSize,
                       ),
                       child: widget.item.leading!,
@@ -337,8 +345,9 @@ class _SidebarItemState extends State<_SidebarItem> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: labelStyle.copyWith(
-                      color:
-                          widget.selected ? textLuminance(selectedColor) : null,
+                      color: widget.selected || _isDraggingInside
+                          ? textLuminance(selectedColor)
+                          : null,
                     ),
                     child: widget.item.label,
                   ),
@@ -363,7 +372,8 @@ class _SidebarItemState extends State<_SidebarItem> {
       ),
     );
 
-    if (widget.onReordered != null) {
+    Widget? draggableSbItemWidget() {
+      if (widget.onReordered == null) return null;
       final feedback = Container(
         width: 134.0 + theme.visualDensity.horizontal,
         height: itemSize.height + theme.visualDensity.vertical,
@@ -384,7 +394,7 @@ class _SidebarItemState extends State<_SidebarItem> {
                   data: MacosIconThemeData(
                     color: widget.selected
                         ? MacosColors.white
-                        : MacosColors.controlAccentColor,
+                        : MacosTheme.of(context).primaryColor,
                     size: itemSize.iconSize,
                   ),
                   child: widget.item.leading!,
@@ -413,45 +423,76 @@ class _SidebarItemState extends State<_SidebarItem> {
         SidebarItemDragBehavior.dragOnly,
       ].contains(widget.item.dragBehavior);
 
-      result = Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (renderDragTarget)
-            DragTarget<String>(
-              onWillAccept: _onWillAccept,
-              onAccept: (data) => widget.onReordered!(
-                data,
-                widget.item.identifier,
-                DropAffinity.above,
-              ),
-              builder: (context, accepted, rejected) =>
-                  _dropTarget(renderDivider: accepted.isNotEmpty),
-            ),
-          renderDraggable
-              ? Draggable<String>(
-                  data: widget.item.identifier,
-                  axis: Axis.vertical,
-                  feedback: feedback,
-                  childWhenDragging: Opacity(opacity: 0.5, child: result),
-                  child: result,
-                )
-              : result,
-          if (widget.isLastDisclousureItem == true && renderDragTarget)
-            DragTarget<String>(
-              onWillAccept: _onWillAccept,
-              onAccept: (data) => widget.onReordered!(
-                data,
-                widget.item.identifier,
-                DropAffinity.below,
-              ),
-              builder: (context, accepted, rejected) =>
-                  _dropTarget(renderDivider: accepted.isNotEmpty),
-            ),
-        ],
-      );
+      return DragTarget<T>(
+          onWillAccept: (data) => _onWillAccept(data, DropAffinity.inside),
+          onMove: (details) {
+            final shouldUpdate =
+                _onWillAccept(details.data, DropAffinity.inside);
+            if (!shouldUpdate || _isDraggingInside) return;
+            setState(() {
+              _isDraggingInside = true;
+            });
+          },
+          onLeave: (details) {
+            if (!_isDraggingInside) return;
+            setState(() {
+              _isDraggingInside = false;
+            });
+          },
+          onAccept: (data) {
+            widget.onReordered!(
+              data,
+              widget.item.identifier,
+              DropAffinity.inside,
+            );
+            setState(() {
+              _isDraggingInside = false;
+            });
+          },
+          builder: (context, accepted, rejected) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (renderDragTarget)
+                  DragTarget<T>(
+                    onWillAccept: (data) =>
+                        _onWillAccept(data, DropAffinity.above),
+                    onAccept: (data) => widget.onReordered!(
+                      data,
+                      widget.item.identifier,
+                      DropAffinity.above,
+                    ),
+                    builder: (context, accepted, rejected) =>
+                        _dropTarget(renderDivider: accepted.isNotEmpty),
+                  ),
+                renderDraggable
+                    ? Draggable<T>(
+                        data: widget.item.identifier,
+                        axis: Axis.vertical,
+                        feedback: feedback,
+                        childWhenDragging:
+                            Opacity(opacity: 0.5, child: baseSbItemWidget),
+                        child: baseSbItemWidget,
+                      )
+                    : baseSbItemWidget,
+                if (widget.isLastDisclousureItem == true && renderDragTarget)
+                  DragTarget<T>(
+                    onWillAccept: (data) =>
+                        _onWillAccept(data, DropAffinity.below),
+                    onAccept: (data) => widget.onReordered!(
+                      data,
+                      widget.item.identifier,
+                      DropAffinity.below,
+                    ),
+                    builder: (context, accepted, rejected) =>
+                        _dropTarget(renderDivider: accepted.isNotEmpty),
+                  ),
+              ],
+            );
+          });
     }
 
-    result = MouseRegion(
+    final sbItemWidget = MouseRegion(
       hitTestBehavior: HitTestBehavior.translucent,
       opaque: false,
       onEnter: (_) {
@@ -464,16 +505,16 @@ class _SidebarItemState extends State<_SidebarItem> {
           _isHovered = false;
         });
       },
-      child: result,
+      child: draggableSbItemWidget() ?? baseSbItemWidget,
     );
 
     final builder = widget.item.builder;
-    if (builder == null) return result;
-    return Builder(builder: (context) => builder(context, result));
+    if (builder == null) return sbItemWidget;
+    return Builder(builder: (context) => builder(context, sbItemWidget));
   }
 }
 
-class _DisclosureSidebarItem extends StatefulWidget {
+class _DisclosureSidebarItem<T extends Object> extends StatefulWidget {
   // ignore: use_super_parameters
   _DisclosureSidebarItem({
     Key? key,
@@ -485,28 +526,30 @@ class _DisclosureSidebarItem extends StatefulWidget {
   })  : assert(item.disclosureItems != null),
         super(key: key);
 
-  final SidebarItem item;
+  final SidebarItem<T> item;
 
-  final String? currentIdentifier;
+  final T? currentIdentifier;
 
   /// A function to perform when the widget is clicked or tapped.
   ///
   /// Typically a [Navigator] call
-  final ValueChanged<SidebarItem>? onChanged;
+  final ValueChanged<SidebarItem<T>>? onChanged;
 
   /// Callback that runs when a sidebar item is dragged to a new position.
-  final void Function(
-      String reorderedId, String droppedAt, DropAffinity affinity)? onReordered;
+  final void Function(T reorderedId, T droppedAt, DropAffinity affinity)?
+      onReordered;
 
   /// Use to render a DropTarget below the item if it is the last on the list of
   /// disclousure items of a _DisclosureSidebarItem.
   final bool? isLastDisclousureItem;
 
   @override
-  __DisclosureSidebarItemState createState() => __DisclosureSidebarItemState();
+  __DisclosureSidebarItemState<T> createState() =>
+      __DisclosureSidebarItemState<T>();
 }
 
-class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
+class __DisclosureSidebarItemState<T extends Object>
+    extends State<_DisclosureSidebarItem<T>>
     with SingleTickerProviderStateMixin {
   static final Animatable<double> _easeInTween =
       CurveTween(curve: Curves.easeIn);
@@ -517,7 +560,6 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
   late Animation<double> _iconTurns;
   late Animation<double> _heightFactor;
 
-  bool _isExpanded = true;
   bool _isHovered = false;
 
   bool get hasLeading => widget.item.leading != null;
@@ -526,7 +568,7 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      value: 1,
+      value: widget.item.isExpanded ? 1 : 0,
       duration: _kExpand,
       vsync: this,
     );
@@ -534,23 +576,20 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
     _iconTurns = _controller.drive(_halfTween.chain(_easeInTween));
   }
 
-  void _handleTap() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-      if (_isExpanded) {
-        _controller.forward();
-      } else {
-        _controller.reverse().then<void>((void value) {
-          if (!mounted) return;
-          setState(() {
-            // Rebuild without widget.children.
-          });
+  @override
+  void didUpdateWidget(covariant _DisclosureSidebarItem<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!mounted || oldWidget.item.isExpanded == widget.item.isExpanded) return;
+    if (widget.item.isExpanded) {
+      _controller.forward();
+    } else {
+      _controller.reverse().then<void>((void value) {
+        if (!mounted) return;
+        setState(() {
+          // Rebuild without widget.children.
         });
-      }
-
-      PageStorage.of(context).writeState(context, _isExpanded);
-    });
-    // widget.onExpansionChanged?.call(_isExpanded);
+      });
+    }
   }
 
   Widget _buildChildren(BuildContext context, Widget? child) {
@@ -596,10 +635,13 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
                 dragBehavior: widget.item.dragBehavior,
                 onWillAccept: widget.item.onWillAccept,
                 label: widget.item.label,
+                isExpanded: widget.item.isExpanded,
+                onExpanded: widget.item.onExpanded,
                 leading: Row(
                   children: [
                     GestureDetector(
-                      onTap: _handleTap,
+                      onTap: () =>
+                          widget.item.onExpanded(!widget.item.isExpanded),
                       child: Container(
                         color: Colors.transparent,
                         child: RotationTransition(
@@ -666,7 +708,7 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
     assert(debugCheckHasMacosTheme(context));
     final theme = MacosTheme.of(context);
 
-    final bool closed = !_isExpanded && _controller.isDismissed;
+    final bool closed = !widget.item.isExpanded && _controller.isDismissed;
 
     final Widget result = Offstage(
       offstage: closed,
@@ -683,7 +725,7 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
               child: SizedBox(
                 width: double.infinity,
                 child: item.disclosureItems == null
-                    ? _SidebarItem(
+                    ? _SidebarItem<T>(
                         item: item,
                         onReordered: widget.onReordered,
                         isLastDisclousureItem:
@@ -691,7 +733,7 @@ class __DisclosureSidebarItemState extends State<_DisclosureSidebarItem>
                         onClick: () => widget.onChanged?.call(item),
                         selected: item.identifier == widget.currentIdentifier,
                       )
-                    : _DisclosureSidebarItem(
+                    : _DisclosureSidebarItem<T>(
                         item: item,
                         currentIdentifier: widget.currentIdentifier,
                         onReordered: widget.onReordered,
@@ -723,4 +765,4 @@ bool debugCheckSidebarIdsUnique(List<SidebarItem> items) {
   return itemIds.length == Set.of(itemIds).length;
 }
 
-enum DropAffinity { above, below }
+enum DropAffinity { above, below, inside }
