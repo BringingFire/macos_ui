@@ -254,8 +254,8 @@ class _SidebarItemState<T extends Object> extends State<_SidebarItem<T>> {
       color: Colors.transparent,
       child: renderDivider
           ? Center(
-              child:
-                  Container(height: 2, color: MacosColors.controlAccentColor),
+              child: Container(
+                  height: 2, color: MacosTheme.of(context).primaryColor),
             )
           : null,
     );
@@ -293,7 +293,7 @@ class _SidebarItemState<T extends Object> extends State<_SidebarItem<T>> {
     }
 
     Color backgroundColor() {
-      if (_isDraggingInside) return MacosColors.controlAccentColor;
+      if (_isDraggingInside) return MacosTheme.of(context).primaryColor;
       if (widget.selected) return selectedColor;
       return unselectedColor;
     }
@@ -334,7 +334,7 @@ class _SidebarItemState<T extends Object> extends State<_SidebarItem<T>> {
                       data: MacosIconThemeData(
                         color: widget.selected
                             ? MacosColors.white
-                            : MacosColors.controlAccentColor,
+                            : MacosTheme.of(context).primaryColor,
                         size: itemSize.iconSize,
                       ),
                       child: widget.item.leading!,
@@ -394,7 +394,7 @@ class _SidebarItemState<T extends Object> extends State<_SidebarItem<T>> {
                   data: MacosIconThemeData(
                     color: widget.selected
                         ? MacosColors.white
-                        : MacosColors.controlAccentColor,
+                        : MacosTheme.of(context).primaryColor,
                     size: itemSize.iconSize,
                   ),
                   child: widget.item.leading!,
