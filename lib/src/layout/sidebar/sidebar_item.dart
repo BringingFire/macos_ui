@@ -29,7 +29,7 @@ class SidebarItem<T extends Object> with Diagnosticable {
   });
 
   /// A builder that will be used to wrap the sidebar item widget if provided.
-  final Function(BuildContext, Widget)? builder;
+  final Widget Function(BuildContext, Widget)? builder;
 
   /// Arbitrary identifier for this sidebar item. Must be unique among all
   /// sidebar items, including nested disclosure items.
