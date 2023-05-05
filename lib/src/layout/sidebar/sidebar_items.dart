@@ -222,7 +222,6 @@ class _SidebarItem<T extends Object> extends StatefulWidget {
 }
 
 class _SidebarItemState<T extends Object> extends State<_SidebarItem<T>> {
-  bool _isHovered = false;
   bool _isDraggingInside = false;
 
   void _handleActionTap() async {
@@ -353,17 +352,11 @@ class _SidebarItemState<T extends Object> extends State<_SidebarItem<T>> {
                   ),
                 ),
                 if (hasTrailing)
-                  AnimatedOpacity(
-                    opacity: _isHovered ? 1 : 0,
-                    duration: _kExpand,
-                    child: DefaultTextStyle(
-                      style: labelStyle.copyWith(
-                        color: widget.selected
-                            ? textLuminance(selectedColor)
-                            : null,
-                      ),
-                      child: widget.item.trailing!,
+                  DefaultTextStyle(
+                    style: labelStyle.copyWith(
+                      color: widget.selected ? textLuminance(selectedColor) : null,
                     ),
+                    child: widget.item.trailing!,
                   ),
               ],
             ),
@@ -489,24 +482,11 @@ class _SidebarItemState<T extends Object> extends State<_SidebarItem<T>> {
                   ),
               ],
             );
-          });
+        },
+      );
     }
 
-    final sbItemWidget = MouseRegion(
-      hitTestBehavior: HitTestBehavior.translucent,
-      opaque: false,
-      onEnter: (_) {
-        setState(() {
-          _isHovered = true;
-        });
-      },
-      onExit: (_) {
-        setState(() {
-          _isHovered = false;
-        });
-      },
-      child: draggableSbItemWidget() ?? baseSbItemWidget,
-    );
+    final sbItemWidget = draggableSbItemWidget() ?? baseSbItemWidget;
 
     final builder = widget.item.builder;
     if (builder == null) return sbItemWidget;
@@ -560,8 +540,6 @@ class __DisclosureSidebarItemState<T extends Object>
   late Animation<double> _iconTurns;
   late Animation<double> _heightFactor;
 
-  bool _isHovered = false;
-
   bool get hasLeading => widget.item.leading != null;
 
   @override
@@ -613,74 +591,51 @@ class __DisclosureSidebarItemState<T extends Object>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        MouseRegion(
-          opaque: false,
-          hitTestBehavior: HitTestBehavior.translucent,
-          onEnter: (_) {
-            setState(() {
-              _isHovered = true;
-            });
-          },
-          onExit: (_) {
-            setState(() {
-              _isHovered = false;
-            });
-          },
-          child: SizedBox(
-            width: double.infinity,
-            child: _SidebarItem(
-              onReordered: widget.onReordered,
-              item: SidebarItem(
-                identifier: widget.item.identifier,
-                dragBehavior: widget.item.dragBehavior,
-                onWillAccept: widget.item.onWillAccept,
-                label: widget.item.label,
-                isExpanded: widget.item.isExpanded,
-                onExpanded: widget.item.onExpanded,
-                leading: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () =>
-                          widget.item.onExpanded(!widget.item.isExpanded),
-                      child: Container(
-                        color: Colors.transparent,
-                        child: RotationTransition(
-                          turns: _iconTurns,
-                          child: Icon(
-                            CupertinoIcons.chevron_right,
-                            size: 12.0,
-                            color: theme.brightness == Brightness.light
-                                ? MacosColors.black
-                                : MacosColors.white,
-                          ),
+        SizedBox(
+          width: double.infinity,
+          child: _SidebarItem(
+            onReordered: widget.onReordered,
+            item: SidebarItem(
+              identifier: widget.item.identifier,
+              dragBehavior: widget.item.dragBehavior,
+              onWillAccept: widget.item.onWillAccept,
+              label: widget.item.label,
+              isExpanded: widget.item.isExpanded,
+              onExpanded: widget.item.onExpanded,
+              leading: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => widget.item.onExpanded(!widget.item.isExpanded),
+                    child: Container(
+                      color: Colors.transparent,
+                      child: RotationTransition(
+                        turns: _iconTurns,
+                        child: Icon(
+                          CupertinoIcons.chevron_right,
+                          size: 12.0,
+                          color: theme.brightness == Brightness.light ? MacosColors.black : MacosColors.white,
                         ),
                       ),
                     ),
-                    if (hasLeading)
-                      Padding(
-                        padding: EdgeInsets.only(left: spacing),
-                        child: MacosIconTheme.merge(
-                          data: MacosIconThemeData(size: itemSize.iconSize),
-                          child: widget.item.leading!,
-                        ),
+                  ),
+                  if (hasLeading)
+                    Padding(
+                      padding: EdgeInsets.only(left: spacing),
+                      child: MacosIconTheme.merge(
+                        data: MacosIconThemeData(size: itemSize.iconSize),
+                        child: widget.item.leading!,
                       ),
-                  ],
-                ),
-                unselectedColor: MacosColors.transparent,
-                focusNode: widget.item.focusNode,
-                semanticLabel: widget.item.semanticLabel,
-                shape: widget.item.shape,
-                trailing: widget.item.trailing == null
-                    ? null
-                    : AnimatedOpacity(
-                        opacity: _isHovered ? 1 : 0,
-                        duration: _kExpand,
-                        child: widget.item.trailing,
-                      ),
+                    ),
+                ],
               ),
-              onClick: () => widget.onChanged?.call(widget.item),
-              selected: widget.item.identifier == widget.currentIdentifier,
+              unselectedColor: MacosColors.transparent,
+              focusNode: widget.item.focusNode,
+              semanticLabel: widget.item.semanticLabel,
+              shape: widget.item.shape,
+              trailing: widget.item.trailing,
             ),
+            onClick: () => widget.onChanged?.call(widget.item),
+            selected: widget.item.identifier == widget.currentIdentifier,
           ),
         ),
         ClipRect(
