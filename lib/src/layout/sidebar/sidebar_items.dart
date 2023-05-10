@@ -596,6 +596,8 @@ class __DisclosureSidebarItemState<T extends Object>
           child: _SidebarItem(
             onReordered: widget.onReordered,
             item: SidebarItem(
+              builder: widget.item.builder,
+              selectedColor: widget.item.selectedColor,
               identifier: widget.item.identifier,
               dragBehavior: widget.item.dragBehavior,
               onWillAccept: widget.item.onWillAccept,
