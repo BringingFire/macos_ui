@@ -50,34 +50,27 @@ class _WidgetGalleryState extends State<WidgetGallery> {
   double sliderValue = 0;
   bool value = false;
 
-  String currentIdentifier = 'buttons';
+  int pageIndex = 0;
 
   late final searchFieldController = TextEditingController();
 
-  final Map<String, Widget> pages = {
-    'buttons': CupertinoTabView(
+  final List<Widget> pages = [
+    CupertinoTabView(
       builder: (_) => const ButtonsPage(),
     ),
-    'indicators': const IndicatorsPage(),
-    'fields': const FieldsPage(),
-    'colors': const ColorsPage(),
-    'disclosure': const SizedBox(),
-    'add': const Center(
+    const IndicatorsPage(),
+    const FieldsPage(),
+    const ColorsPage(),
+    const Center(
       child: MacosIcon(
         CupertinoIcons.add,
       ),
     ),
-    'dialogs': const DialogsPage(),
-    'toolbar': const ToolbarPage(),
-    'selectors': const SelectorsPage(),
-    'tabview': const TabViewPage(),
-  };
-
-  final Map<String, bool> expandedState = {};
-
-  bool isExpanded(String id) => expandedState[id] ?? true;
-  void updateExpandedState(String id, bool isExpanded) =>
-      expandedState[id] = isExpanded;
+    const DialogsPage(),
+    const ToolbarPage(),
+    const SelectorsPage(),
+    const TabViewPage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -123,43 +116,43 @@ class _WidgetGalleryState extends State<WidgetGallery> {
               switch (result.searchKey) {
                 case 'Buttons':
                   setState(() {
-                    currentIdentifier = 'buttons';
+                    pageIndex = 0;
                     searchFieldController.clear();
                   });
                   break;
                 case 'Indicators':
                   setState(() {
-                    currentIdentifier = 'indicators';
+                    pageIndex = 1;
                     searchFieldController.clear();
                   });
                   break;
                 case 'Fields':
                   setState(() {
-                    currentIdentifier = 'fields';
+                    pageIndex = 2;
                     searchFieldController.clear();
                   });
                   break;
                 case 'Colors':
                   setState(() {
-                    currentIdentifier = 'colors';
+                    pageIndex = 3;
                     searchFieldController.clear();
                   });
                   break;
                 case 'Dialogs and Sheets':
                   setState(() {
-                    currentIdentifier = 'dialogs';
+                    pageIndex = 5;
                     searchFieldController.clear();
                   });
                   break;
                 case 'Toolbar':
                   setState(() {
-                    currentIdentifier = 'toolbar';
+                    pageIndex = 6;
                     searchFieldController.clear();
                   });
                   break;
                 case 'Selectors':
                   setState(() {
-                    currentIdentifier = 'selectors';
+                    pageIndex = 7;
                     searchFieldController.clear();
                   });
                   break;
@@ -178,59 +171,43 @@ class _WidgetGalleryState extends State<WidgetGallery> {
             ],
           ),
           minWidth: 200,
-          builder: (context, scrollController) {
-            return SidebarItems<String>(
-              currentIdentifier: currentIdentifier,
-              onChanged: (i) => setState(() => currentIdentifier = i),
-              scrollController: scrollController,
+          builder: (context, controller) {
+            return SidebarItems(
+              currentIndex: pageIndex,
+              onChanged: (i) => setState(() => pageIndex = i),
+              scrollController: controller,
               itemSize: SidebarItemSize.large,
               items: [
-                SidebarItem(
-                  identifier: 'buttons',
-                  isExpanded: isExpanded('buttons'),
-                  onExpanded: (expanded) =>
-                      setState(() => updateExpandedState('buttons', expanded)),
+                const SidebarItem(
                   // leading: MacosIcon(CupertinoIcons.square_on_circle),
-                  leading: const MacosImageIcon(
+                  leading: MacosImageIcon(
                     AssetImage(
                       'assets/sf_symbols/button_programmable_2x.png',
                     ),
                   ),
-                  label: const Text('Buttons'),
+                  label: Text('Buttons'),
                 ),
-                SidebarItem(
-                  identifier: 'indicators',
-                  isExpanded: isExpanded('indicators'),
-                  onExpanded: (expanded) => setState(
-                      () => updateExpandedState('indicators', expanded)),
-                  leading: const MacosImageIcon(
+                const SidebarItem(
+                  leading: MacosImageIcon(
                     AssetImage(
                       'assets/sf_symbols/lines_measurement_horizontal_2x.png',
                     ),
                   ),
-                  label: const Text('Indicators'),
+                  label: Text('Indicators'),
                 ),
-                SidebarItem(
-                  identifier: 'fields',
-                  isExpanded: isExpanded('fields'),
-                  onExpanded: (expanded) =>
-                      setState(() => updateExpandedState('fields', expanded)),
-                  leading: const MacosImageIcon(
+                const SidebarItem(
+                  leading: MacosImageIcon(
                     AssetImage(
                       'assets/sf_symbols/character_cursor_ibeam_2x.png',
                     ),
                   ),
-                  label: const Text('Fields'),
+                  label: Text('Fields'),
                 ),
                 SidebarItem(
-                  identifier: 'disclosure',
-                  isExpanded: isExpanded('disclosure'),
-                  onExpanded: (expanded) => setState(
-                      () => updateExpandedState('disclosure', expanded)),
                   leading: const MacosIcon(CupertinoIcons.folder),
                   label: const Text('Disclosure'),
                   trailing: Text(
-                    '',
+                    '2',
                     style: TextStyle(
                       color: MacosTheme.brightnessOf(context) == Brightness.dark
                           ? MacosColors.tertiaryLabelColor.darkColor
@@ -238,63 +215,39 @@ class _WidgetGalleryState extends State<WidgetGallery> {
                     ),
                   ),
                   disclosureItems: [
-                    SidebarItem(
-                      identifier: 'colors',
-                      isExpanded: isExpanded('colors'),
-                      onExpanded: (expanded) => setState(
-                          () => updateExpandedState('colors', expanded)),
-                      leading: const MacosImageIcon(
+                    const SidebarItem(
+                      leading: MacosImageIcon(
                         AssetImage(
                           'assets/sf_symbols/rectangle_3_group_2x.png',
                         ),
                       ),
-                      label: const Text('Colors'),
+                      label: Text('Colors'),
                     ),
-                    SidebarItem(
-                      identifier: 'add',
-                      isExpanded: isExpanded('add'),
-                      onExpanded: (expanded) =>
-                          setState(() => updateExpandedState('add', expanded)),
-                      leading: const MacosIcon(CupertinoIcons.infinite),
-                      label: const Text('Item 3'),
+                    const SidebarItem(
+                      leading: MacosIcon(CupertinoIcons.infinite),
+                      label: Text('Item 3'),
                     ),
                   ],
                 ),
-                SidebarItem(
-                  identifier: 'dialogs',
-                  isExpanded: isExpanded('dialogs'),
-                  onExpanded: (expanded) =>
-                      setState(() => updateExpandedState('dialogs', expanded)),
-                  leading: const MacosIcon(CupertinoIcons.square_on_square),
-                  label: const Text('Dialogs & Sheets'),
+                const SidebarItem(
+                  leading: MacosIcon(CupertinoIcons.square_on_square),
+                  label: Text('Dialogs & Sheets'),
                 ),
-                SidebarItem(
-                  identifier: 'toolbar',
-                  isExpanded: isExpanded('toolbar'),
-                  onExpanded: (expanded) =>
-                      setState(() => updateExpandedState('toolbar', expanded)),
-                  leading: const MacosIcon(CupertinoIcons.macwindow),
-                  label: const Text('Toolbar'),
+                const SidebarItem(
+                  leading: MacosIcon(CupertinoIcons.macwindow),
+                  label: Text('Toolbar'),
                 ),
-                SidebarItem(
-                  identifier: 'selectors',
-                  isExpanded: isExpanded('selectors'),
-                  onExpanded: (expanded) => setState(
-                      () => updateExpandedState('selectors', expanded)),
-                  leading: const MacosImageIcon(
+                const SidebarItem(
+                  leading: MacosImageIcon(
                     AssetImage(
                       'assets/sf_symbols/filemenu_and_selection_2x.png',
                     ),
                   ),
-                  label: const Text('Selectors'),
+                  label: Text('Selectors'),
                 ),
-                SidebarItem(
-                  identifier: 'tabview',
-                  isExpanded: isExpanded('tabview'),
-                  onExpanded: (expanded) =>
-                      setState(() => updateExpandedState('tabview', expanded)),
-                  leading: const MacosIcon(CupertinoIcons.uiwindow_split_2x1),
-                  label: const Text('TabView'),
+                const SidebarItem(
+                  leading: MacosIcon(CupertinoIcons.uiwindow_split_2x1),
+                  label: Text('TabView'),
                 ),
               ],
             );
@@ -310,13 +263,16 @@ class _WidgetGalleryState extends State<WidgetGallery> {
           minWidth: 200,
           maxWidth: 300,
           shownByDefault: false,
-          builder: (context, _) {
+          builder: (context, scrollController) {
             return const Center(
               child: Text('End Sidebar'),
             );
           },
         ),
-        child: pages[currentIdentifier],
+        child: IndexedStack(
+          index: pageIndex,
+          children: pages,
+        ),
       ),
     );
   }

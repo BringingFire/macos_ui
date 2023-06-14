@@ -81,3 +81,4 @@ export 'src/theme/search_field_theme.dart';
 export 'src/theme/time_picker_theme.dart';
 export 'src/theme/tooltip_theme.dart';
 export 'src/theme/typography.dart';
+export 'src/utils.dart';
