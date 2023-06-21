@@ -268,7 +268,11 @@ class _MacosWindowState extends State<MacosWindow> {
                     child: Column(
                       children: [
                         if ((sidebar.topOffset) > 0)
-                          SizedBox(height: sidebar.topOffset),
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                            child: SizedBox(height: sidebar.topOffset),
+                          ),
                         if (_sidebarScrollController.hasClients &&
                             _sidebarScrollController.offset > 0.0)
                           Divider(thickness: 1, height: 1, color: dividerColor),
