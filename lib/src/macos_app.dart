@@ -81,8 +81,8 @@ class MacosApp extends StatefulWidget {
   MacosApp.router({
     super.key,
     this.routeInformationProvider,
-    required RouteInformationParser<Object> this.routeInformationParser,
-    required RouterDelegate<Object> this.routerDelegate,
+    this.routeInformationParser,
+    this.routerDelegate,
     this.backButtonDispatcher,
     this.builder,
     this.title = '',
@@ -107,6 +107,10 @@ class MacosApp extends StatefulWidget {
     this.darkTheme,
     this.routerConfig,
   })  : assert(supportedLocales.isNotEmpty),
+        assert(
+          (routeInformationParser != null && routerDelegate != null) ||
+              routerConfig != null,
+        ),
         navigatorObservers = null,
         navigatorKey = null,
         onGenerateRoute = null,
@@ -305,7 +309,8 @@ class MacosApp extends StatefulWidget {
 }
 
 class _MacosAppState extends State<MacosApp> {
-  bool get _usesRouter => widget.routerDelegate != null;
+  bool get _usesRouter =>
+      widget.routerDelegate != null || widget.routerConfig != null;
 
   Widget _macosBuilder(BuildContext context, Widget? child) {
     final mode = widget.themeMode ?? ThemeMode.system;
@@ -352,8 +357,8 @@ class _MacosAppState extends State<MacosApp> {
         key: GlobalObjectKey(this),
         routerConfig: widget.routerConfig,
         routeInformationProvider: widget.routeInformationProvider,
-        routeInformationParser: widget.routeInformationParser!,
-        routerDelegate: widget.routerDelegate!,
+        routeInformationParser: widget.routeInformationParser,
+        routerDelegate: widget.routerDelegate,
         backButtonDispatcher: widget.backButtonDispatcher,
         builder: _macosBuilder,
         title: widget.title,
