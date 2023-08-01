@@ -74,7 +74,8 @@ class MacosApp extends StatefulWidget {
   })  : routeInformationProvider = null,
         routeInformationParser = null,
         routerDelegate = null,
-        backButtonDispatcher = null;
+        backButtonDispatcher = null,
+        routerConfig = null;
 
   /// Creates a [MacosApp] that uses the [Router] instead of a [Navigator].
   MacosApp.router({
@@ -104,6 +105,7 @@ class MacosApp extends StatefulWidget {
     this.themeMode,
     this.theme,
     this.darkTheme,
+    this.routerConfig,
   })  : assert(supportedLocales.isNotEmpty),
         navigatorObservers = null,
         navigatorKey = null,
@@ -295,6 +297,9 @@ class MacosApp extends StatefulWidget {
   /// The style used if [themeMode] is [ThemeMode.light]
   final MacosThemeData? theme;
 
+  /// The configuration object used for [MacosApp.router]
+  final RouterConfig<Object>? routerConfig;
+
   @override
   State<MacosApp> createState() => _MacosAppState();
 }
@@ -345,6 +350,7 @@ class _MacosAppState extends State<MacosApp> {
     if (_usesRouter) {
       return c.CupertinoApp.router(
         key: GlobalObjectKey(this),
+        routerConfig: widget.routerConfig,
         routeInformationProvider: widget.routeInformationProvider,
         routeInformationParser: widget.routeInformationParser!,
         routerDelegate: widget.routerDelegate!,
