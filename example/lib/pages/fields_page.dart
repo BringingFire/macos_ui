@@ -14,7 +14,6 @@ class _FieldsPageState extends State<FieldsPage> {
     return MacosScaffold(
       toolBar: ToolBar(
         title: const Text('Fields'),
-        titleWidth: 150.0,
         actions: [
           ToolBarIconButton(
             label: 'Toggle Sidebar',

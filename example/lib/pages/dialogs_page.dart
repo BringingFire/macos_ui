@@ -15,7 +15,6 @@ class _DialogsPageState extends State<DialogsPage> {
     return MacosScaffold(
       toolBar: ToolBar(
         title: const Text('Dialogs and Sheets'),
-        titleWidth: 150.0,
         actions: [
           ToolBarIconButton(
             label: 'Toggle Sidebar',

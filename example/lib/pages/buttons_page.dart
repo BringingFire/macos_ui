@@ -24,7 +24,6 @@ class _ButtonsPageState extends State<ButtonsPage> {
     return MacosScaffold(
       toolBar: ToolBar(
         title: const Text('Buttons'),
-        titleWidth: 150.0,
         leading: MacosTooltip(
           message: 'Toggle Sidebar',
           useMousePosition: false,
