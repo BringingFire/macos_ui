@@ -37,7 +37,7 @@ class ToolBar extends StatefulWidget {
     this.leading,
     this.automaticallyImplyLeading = true,
     this.actions,
-    this.centerTitle = false,
+    this.centerTitle = true,
     this.dividerColor,
   });
 
@@ -155,6 +155,7 @@ class _ToolBarState extends State<ToolBar> {
     Widget? title = widget.title;
     if (title != null) {
       title = DefaultTextStyle(
+        textAlign: widget.centerTitle ? TextAlign.center : null,
         style: MacosTheme.of(context).typography.headline.copyWith(
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -162,6 +163,8 @@ class _ToolBarState extends State<ToolBar> {
                   ? const Color(0xFFEAEAEA)
                   : const Color(0xFF4D4D4D),
             ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
         child: title,
       );
     }
