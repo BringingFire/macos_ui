@@ -11,9 +11,6 @@ const _kToolbarHeight = 52.0;
 /// Defines the width of the leading widget in the [ToolBar]
 const _kLeadingWidth = 20.0;
 
-/// Defines the width of the [ToolBar]'s title.
-const _kTitleWidth = 150.0;
-
 /// A toolbar to use in a [MacosScaffold].
 class ToolBar extends StatefulWidget {
   /// Creates a toolbar in the [MacosScaffold]. The toolbar appears below the
@@ -35,13 +32,12 @@ class ToolBar extends StatefulWidget {
     this.height = _kToolbarHeight,
     this.alignment = Alignment.center,
     this.title,
-    this.titleWidth = _kTitleWidth,
     this.padding = const EdgeInsets.symmetric(horizontal: 8, vertical: 4.0),
     this.decoration,
     this.leading,
     this.automaticallyImplyLeading = true,
     this.actions,
-    this.centerTitle = false,
+    this.centerTitle = true,
     this.dividerColor,
   });
 
@@ -69,11 +65,6 @@ class ToolBar extends StatefulWidget {
   ///
   /// Typically, a [Text] widget.
   final Widget? title;
-
-  /// Specifies the width of the title of the [ToolBar].
-  ///
-  /// Defaults to [_kTitleWidth] which is 150.0.
-  final double titleWidth;
 
   /// The decoration to paint behind the [title].
   final BoxDecoration? decoration;
@@ -163,20 +154,19 @@ class _ToolBarState extends State<ToolBar> {
 
     Widget? title = widget.title;
     if (title != null) {
-      title = SizedBox(
-        width: widget.titleWidth,
-        child: DefaultTextStyle(
-          style: MacosTheme.of(context).typography.headline.copyWith(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: theme.brightness.isDark
-                    ? const Color(0xFFEAEAEA)
-                    : const Color(0xFF4D4D4D),
-              ),
-          child: title,
-        ),
+      title = DefaultTextStyle(
+        textAlign: widget.centerTitle ? TextAlign.center : null,
+        style: MacosTheme.of(context).typography.headline.copyWith(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: theme.brightness.isDark
+                  ? const Color(0xFFEAEAEA)
+                  : const Color(0xFF4D4D4D),
+            ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+        child: title,
       );
-      overflowBreakpoint += widget.titleWidth;
     }
 
     // Collect the toolbar action widgets that can be shown inside the ToolBar

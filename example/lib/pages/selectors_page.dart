@@ -14,7 +14,6 @@ class _SelectorsPageState extends State<SelectorsPage> {
     return MacosScaffold(
       toolBar: ToolBar(
         title: const Text('Selectors'),
-        titleWidth: 150.0,
         actions: [
           ToolBarIconButton(
             label: 'Toggle Sidebar',

@@ -19,7 +19,6 @@ class _IndicatorsPageState extends State<IndicatorsPage> {
     return MacosScaffold(
       toolBar: ToolBar(
         title: const Text('Indicators'),
-        titleWidth: 150.0,
         actions: [
           ToolBarIconButton(
             label: 'Toggle Sidebar',

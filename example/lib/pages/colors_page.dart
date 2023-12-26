@@ -14,7 +14,6 @@ class _ColorsPageState extends State<ColorsPage> {
     return MacosScaffold(
       toolBar: ToolBar(
         title: const Text('Colors'),
-        titleWidth: 150.0,
         actions: [
           ToolBarIconButton(
             label: 'Toggle Sidebar',
