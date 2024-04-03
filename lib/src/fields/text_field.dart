@@ -2,6 +2,7 @@ import 'dart:ui' as ui show BoxHeightStyle, BoxWidthStyle;
 
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:macos_ui/macos_ui.dart';
@@ -278,6 +279,7 @@ class MacosTextField extends StatefulWidget {
     this.cursorHeight,
     this.cursorRadius = const Radius.circular(2.0),
     this.cursorColor,
+    this.selectionColor,
     this.selectionHeightStyle = ui.BoxHeightStyle.tight,
     this.selectionWidthStyle = ui.BoxWidthStyle.tight,
     this.keyboardAppearance,
@@ -396,6 +398,7 @@ class MacosTextField extends StatefulWidget {
     this.cursorHeight,
     this.cursorRadius = const Radius.circular(2.0),
     this.cursorColor,
+    this.selectionColor,
     this.selectionHeightStyle = ui.BoxHeightStyle.tight,
     this.selectionWidthStyle = ui.BoxWidthStyle.tight,
     this.keyboardAppearance,
@@ -666,6 +669,9 @@ class MacosTextField extends StatefulWidget {
   /// which itself defaults to [CupertinoColors.activeBlue] in the light theme
   /// and [CupertinoColors.activeOrange] in the dark theme.
   final Color? cursorColor;
+
+  /// The color to paint behind selected text.
+  final Color? selectionColor;
 
   /// Controls how tall the selection highlight boxes are computed to be.
   ///
@@ -1329,7 +1335,10 @@ class _MacosTextFieldState extends State<MacosTextField>
       color: focusedDecoration.color ?? const Color(0x00000000),
     );
 
-    final Color selectionColor =
+    final Color selectionColor = MacosDynamicColor.maybeResolve(
+          widget.selectionColor,
+          context,
+        ) ?? 
         MacosTheme.of(context).primaryColor.withOpacity(0.2);
 
     final Widget paddedEditable = Padding(
