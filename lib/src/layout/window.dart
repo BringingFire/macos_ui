@@ -150,9 +150,7 @@ class _MacosWindowState extends State<MacosWindow> {
       // white.
       sidebarBackgroundColor = Colors.transparent;
     } else {
-      sidebarBackgroundColor = theme.brightness.isDark
-          ? CupertinoColors.tertiarySystemBackground.darkColor
-          : CupertinoColors.systemGrey6.color;
+      sidebarBackgroundColor = theme.canvasColor;
     }
 
     // Respect the end sidebar color override from parent if one is given
