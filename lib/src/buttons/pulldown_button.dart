@@ -675,7 +675,7 @@ class MacosPulldownButton extends StatefulWidget {
   /// If this is provided, [title] should be null.
   ///
   /// It is recommended to use icons from the CupertinoIcons library for this.
-  final IconData? icon;
+  final Widget? icon;
 
   /// Called when the pull-down button is tapped.
   ///
@@ -920,7 +920,12 @@ class _MacosPulldownButtonState extends State<MacosPulldownButton>
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           _hasIcon
-              ? MacosIcon(widget.icon!, color: buttonStyles.textColor)
+              ? MacosIconTheme(
+                  data: MacosIconTheme.of(context).copyWith(
+                    color: buttonStyles.textColor,
+                  ),
+                  child: widget.icon!,
+                )
               : _enabled
                   ? Text(
                       widget.title!,
