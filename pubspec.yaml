@@ -17,7 +17,7 @@ dev_dependencies:
     sdk: flutter
   dart_code_metrics: ^5.6.0
   flutter_lints: ^2.0.1
-  mocktail: ^0.3.0
+  mocktail: ">=0.3.0"
 
 flutter:
   plugin:
